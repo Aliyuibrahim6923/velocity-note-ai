@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "BrainSchema",
+  "type": "object",
+  "properties": {
+    "memory_entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "content": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "source": { "type": "string", "enum": ["voice", "text", "email", "document"] },
+          "linked_assets": { "type": "array", "items": { "type": "string" } },
+          "extracted_tasks": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["id", "content", "created_at", "source"]
+      }
+    },
+    "email_webhook": {
+      "type": "object",
+      "properties": {
+        "sender": { "type": "string", "format": "email" },
+        "subject": { "type": "string" },
+        "body": { "type": "string" },
+        "received_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["sender", "subject", "body", "received_at"]
+    },
+    "file_upload": {
+      "type": "object",
+      "properties": {
+        "filename": { "type": "string" },
+        "file_type": { "type": "string" },
+        "size_bytes": { "type": "integer" },
+        "uploaded_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["filename", "file_type", "size_bytes", "uploaded_at"]
+    }
+  }
+}
