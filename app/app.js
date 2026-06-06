@@ -48,6 +48,31 @@ document.addEventListener("DOMContentLoaded", () => {
     // Initial load
     refreshAll();
 
+    // Sidebar Navigation logic
+    const navItems = document.querySelectorAll(".nav-item");
+    const viewPanels = document.querySelectorAll(".view-panel");
+
+    navItems.forEach(item => {
+        item.addEventListener("click", (e) => {
+            e.preventDefault();
+            
+            // Remove active class from all links
+            navItems.forEach(nav => nav.classList.remove("active"));
+            // Add active class to clicked link
+            item.classList.add("active");
+            
+            // Hide all view panels
+            viewPanels.forEach(panel => panel.classList.remove("active"));
+            
+            // Show selected view panel
+            const target = item.getAttribute("data-target");
+            const targetPanel = document.getElementById(`${target}View`);
+            if (targetPanel) {
+                targetPanel.classList.add("active");
+            }
+        });
+    });
+
     // Event Listeners
     captureBtn.addEventListener("click", captureThought);
     thoughtInput.addEventListener("keypress", (e) => {

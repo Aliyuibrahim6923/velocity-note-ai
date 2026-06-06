@@ -12,191 +12,210 @@
     <link rel="stylesheet" href="index.css">
 </head>
 <body>
-    <header class="os-header">
-        <div class="header-logo">
-            <span class="logo-icon">🪐</span>
-            <div class="logo-text">
-                <h1>AI Life & Wealth OS</h1>
-                <p>Autonomous Lifestyle Twin</p>
-            </div>
-        </div>
-        <div class="header-status">
-            <div class="status-badge active">
-                <span class="pulse-dot"></span>
-                Brain: Ambient
-            </div>
-            <div class="status-badge verified">
-                <span class="pulse-dot"></span>
-                Wallet: Secured
-            </div>
-            <div class="status-badge sync">
-                <span class="pulse-dot"></span>
-                Hands: Syncing
-            </div>
-            <button id="resetBtn" class="reset-button">Reset Database</button>
-        </div>
-    </header>
-
-    <main class="os-grid">
-        <!-- Panel 1: The Brain -->
-        <section id="brainPanel" class="os-panel glass">
-            <div class="panel-header">
-                <h2>The Brain</h2>
-                <span class="panel-subtitle">Multi-Modal Ambient Memory</span>
+    <div class="os-container">
+        <!-- Sidebar Navigation -->
+        <aside class="os-sidebar">
+            <div class="sidebar-logo">
+                <span class="logo-icon">🪐</span>
+                <div class="logo-text">
+                    <h1>AI OS</h1>
+                    <p>Lifestyle Twin</p>
+                </div>
             </div>
             
-            <div class="panel-body">
-                <!-- Instant Capture Text / Voice -->
-                <div class="input-group">
-                    <label for="thoughtInput">Capture Thought / Voice Command</label>
-                    <div class="input-row">
-                        <input type="text" id="thoughtInput" placeholder="Spent $10 cash on parking or Remind me Friday call landlord...">
-                        <button id="captureBtn" class="btn-primary">Capture</button>
-                    </div>
-                </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-target="brain">
+                    <span class="nav-icon">🧠</span> The Brain
+                </a>
+                <a href="#" class="nav-item" data-target="wallet">
+                    <span class="nav-icon">💳</span> The Wallet
+                </a>
+                <a href="#" class="nav-item" data-target="hands">
+                    <span class="nav-icon">📅</span> The Hands
+                </a>
+            </nav>
 
-                <!-- File Ingestion Dropzone -->
-                <div class="input-group">
-                    <label>Upload Document / Appliance Manual</label>
-                    <div class="upload-dropzone" id="dropzone">
-                        <span class="upload-icon">📄</span>
-                        <p>Drag and drop a manual or click to select</p>
-                        <input type="file" id="fileInput" accept=".txt,.pdf,.json" style="display: none;">
-                        <div class="file-options">
-                            <button id="uploadFridgeBtn" class="btn-secondary btn-small">Load Fridge_Manual.pdf</button>
-                            <button id="uploadACBtn" class="btn-secondary btn-small">Load AC_Specs.txt</button>
+            <div class="sidebar-status">
+                <div class="status-badge active">
+                    <span class="pulse-dot"></span>
+                    Brain: Ambient
+                </div>
+                <div class="status-badge verified">
+                    <span class="pulse-dot"></span>
+                    Wallet: Secured
+                </div>
+                <div class="status-badge sync">
+                    <span class="pulse-dot"></span>
+                    Hands: Syncing
+                </div>
+                <button id="resetBtn" class="reset-button">Reset Database</button>
+            </div>
+        </aside>
+
+        <!-- Main View Area -->
+        <main class="os-content">
+            <!-- View 1: The Brain -->
+            <section id="brainView" class="view-panel active">
+                <div class="view-header">
+                    <h2>The Brain</h2>
+                    <p>Multi-Modal Ambient Memory Engine</p>
+                </div>
+                
+                <div class="view-layout-grid">
+                    <!-- Column 1: Forms & Actions -->
+                    <div class="column-actions">
+                        <!-- Instant Capture -->
+                        <div class="input-group">
+                            <label for="thoughtInput">Capture Thought / Voice Command</label>
+                            <div class="input-row">
+                                <input type="text" id="thoughtInput" placeholder="Spent $10 cash on parking or Remind me Friday call landlord...">
+                                <button id="captureBtn" class="btn-primary">Capture</button>
+                            </div>
+                        </div>
+
+                        <!-- Inbound Webhook -->
+                        <div class="webhook-simulator card">
+                            <h3>Inbound Email Webhook Simulator</h3>
+                            <div class="form-row">
+                                <input type="text" id="emailSender" placeholder="sender@example.com" value="tenant@office.com">
+                                <input type="text" id="emailSubject" placeholder="Subject" value="Urgent repair tasks">
+                            </div>
+                            <textarea id="emailBody" placeholder="Email body details...">Remind me Friday to replace water filter and check condenser coils on Refrigerator.</textarea>
+                            <button id="emailWebhookBtn" class="btn-accent">Simulate Email Webhook</button>
+                        </div>
+
+                        <!-- File Ingestion Dropzone -->
+                        <div class="input-group">
+                            <label>Upload Document / Appliance Manual</label>
+                            <div class="upload-dropzone" id="dropzone">
+                                <span class="upload-icon">📄</span>
+                                <p>Drag and drop a manual or click to select</p>
+                                <input type="file" id="fileInput" accept=".txt,.pdf,.json" style="display: none;">
+                                <div class="file-options">
+                                    <button id="uploadFridgeBtn" class="btn-secondary btn-small">Load Fridge_Manual.pdf</button>
+                                    <button id="uploadACBtn" class="btn-secondary btn-small">Load AC_Specs.txt</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Column 2: Data stream / Feed -->
+                    <div class="column-feed">
+                        <div class="feed-section">
+                            <h3>Memory Stream</h3>
+                            <div class="stream-container large" id="memoryStream">
+                                <div class="stream-empty">No ambient memories captured yet.</div>
+                            </div>
                         </div>
                     </div>
                 </div>
+            </section>
 
-                <!-- Email Webhook Simulator -->
-                <div class="webhook-simulator card">
-                    <h3>Inbound Email Webhook Simulator</h3>
-                    <div class="form-row">
-                        <input type="text" id="emailSender" placeholder="sender@example.com" value="tenant@office.com">
-                        <input type="text" id="emailSubject" placeholder="Subject" value="Urgent repair tasks">
-                    </div>
-                    <textarea id="emailBody" placeholder="Email body details...">Remind me Friday to replace water filter and check condenser coils on Refrigerator.</textarea>
-                    <button id="emailWebhookBtn" class="btn-accent">Simulate Email Webhook</button>
+            <!-- View 2: The Wallet -->
+            <section id="walletView" class="view-panel">
+                <div class="view-header">
+                    <h2>The Wallet</h2>
+                    <p>Asset Ledger & Cash Flow Intelligence</p>
                 </div>
+                
+                <div class="view-layout-grid">
+                    <!-- Column 1: Metrics & Webhooks -->
+                    <div class="column-actions">
+                        <div class="metric-grid">
+                            <div class="metric-card">
+                                <span class="metric-label">Total Assets</span>
+                                <span class="metric-value" id="netWorth">$0.00</span>
+                            </div>
+                            <div class="metric-card">
+                                <span class="metric-label">Burn Rate (Net)</span>
+                                <span class="metric-value" id="netCashFlow">$0.00</span>
+                            </div>
+                        </div>
 
-                <!-- Memory Log Feed -->
-                <div class="feed-section">
-                    <h3>Memory Stream</h3>
-                    <div class="stream-container" id="memoryStream">
-                        <!-- Loaded dynamically -->
-                        <div class="stream-empty">No ambient memories captured yet.</div>
+                        <div class="webhook-simulator card">
+                            <h3>Clearing Bank Webhook Simulator</h3>
+                            <p class="description-text">Simulates bank transaction logs. Duplicates are merged with manual entries.</p>
+                            <div class="form-row">
+                                <input type="number" id="bankAmount" placeholder="Amount" value="10.00">
+                                <input type="text" id="bankDesc" placeholder="Card Charge Description" value="Parking card charge">
+                            </div>
+                            <button id="bankWebhookBtn" class="btn-accent">Fire Bank Webhook</button>
+                        </div>
+
+                        <div class="feed-section">
+                            <h3>Physical & Digital Assets</h3>
+                            <div class="list-container" id="assetsList">
+                                <div class="stream-empty">No assets registered. Upload a manual to register.</div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
-        </section>
 
-        <!-- Panel 2: The Wallet -->
-        <section id="walletPanel" class="os-panel glass">
-            <div class="panel-header">
-                <h2>The Wallet</h2>
-                <span class="panel-subtitle">Asset Ledger & Liquidity Velocity</span>
-            </div>
-
-            <div class="panel-body">
-                <!-- Wallet Summary Cards -->
-                <div class="metric-grid">
-                    <div class="metric-card">
-                        <span class="metric-label">Total Assets</span>
-                        <span class="metric-value" id="netWorth">$0.00</span>
-                    </div>
-                    <div class="metric-card">
-                        <span class="metric-label">Burn Rate (Net)</span>
-                        <span class="metric-value" id="netCashFlow">$0.00</span>
-                    </div>
-                </div>
-
-                <!-- Bank Webhook Simulator -->
-                <div class="webhook-simulator card">
-                    <h3>Clearing Bank Webhook Simulator</h3>
-                    <p class="description-text">Simulates bank transaction logs. Duplicates are merged with manual entries.</p>
-                    <div class="form-row">
-                        <input type="number" id="bankAmount" placeholder="Amount" value="10.00">
-                        <input type="text" id="bankDesc" placeholder="Card Charge Description" value="Parking card charge">
-                    </div>
-                    <button id="bankWebhookBtn" class="btn-accent">Fire Bank Webhook</button>
-                </div>
-
-                <!-- Assets List -->
-                <div class="feed-section">
-                    <h3>Physical & Digital Assets</h3>
-                    <div class="list-container" id="assetsList">
-                        <!-- Loaded dynamically -->
-                        <div class="stream-empty">No assets registered. Upload a manual to register.</div>
+                    <!-- Column 2: Transactions list -->
+                    <div class="column-feed">
+                        <div class="feed-section">
+                            <h3>Transaction Ledger</h3>
+                            <div class="list-container large" id="ledgerList">
+                                <div class="stream-empty">No ledger events.</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
+            </section>
 
-                <!-- Ledger list -->
-                <div class="feed-section">
-                    <h3>Transaction Ledger</h3>
-                    <div class="list-container" id="ledgerList">
-                        <!-- Loaded dynamically -->
-                        <div class="stream-empty">No ledger events.</div>
+            <!-- View 3: The Hands -->
+            <section id="handsView" class="view-panel">
+                <div class="view-header">
+                    <h2>The Hands</h2>
+                    <p>Adaptive Planner & Smart Reminder Engine</p>
+                </div>
+                
+                <div class="view-layout-grid">
+                    <!-- Column 1: Forms & Actions -->
+                    <div class="column-actions">
+                        <div class="webhook-simulator card">
+                            <h3>Schedule Calendar Task</h3>
+                            <div class="form-row">
+                                <input type="text" id="taskTitle" placeholder="Task Title" value="Morning Focus Block">
+                                <input type="number" id="taskDuration" placeholder="Duration (min)" value="90">
+                            </div>
+                            <div class="form-row">
+                                <input type="datetime-local" id="taskStartTime">
+                                <select id="taskPriority">
+                                    <option value="1">High Priority</option>
+                                    <option value="2" selected>Medium Priority</option>
+                                    <option value="3">Low Priority</option>
+                                </select>
+                            </div>
+                            <button id="scheduleTaskBtn" class="btn-primary">Add Task</button>
+                        </div>
+
+                        <div class="webhook-simulator card overrun-card">
+                            <h3>Calendar Overrun Resolver</h3>
+                            <p class="description-text">Simulates a task exceeding its schedule. Remaining tasks shift dynamically.</p>
+                            <div class="form-row">
+                                <select id="overrunTaskSelect">
+                                    <option value="">Select a task...</option>
+                                </select>
+                                <input type="number" id="overrunDuration" placeholder="New Duration (min)" value="150">
+                            </div>
+                            <button id="triggerOverrunBtn" class="btn-danger">Resolve Overrun Shift</button>
+                        </div>
+                    </div>
+
+                    <!-- Column 2: Calendar Timeline -->
+                    <div class="column-feed">
+                        <div class="feed-section">
+                            <h3>Daily Timeline Schedule</h3>
+                            <div class="timeline-container large" id="calendarTimeline">
+                                <div class="stream-empty">No tasks scheduled.</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </section>
-
-        <!-- Panel 3: The Hands -->
-        <section id="handsPanel" class="os-panel glass">
-            <div class="panel-header">
-                <h2>The Hands</h2>
-                <span class="panel-subtitle">Adaptive Calendar & Smart Planner</span>
-            </div>
-
-            <div class="panel-body">
-                <!-- Add Task form -->
-                <div class="webhook-simulator card">
-                    <h3>Schedule Calendar Task</h3>
-                    <div class="form-row">
-                        <input type="text" id="taskTitle" placeholder="Task Title" value="Morning Focus Block">
-                        <input type="number" id="taskDuration" placeholder="Duration (min)" value="90">
-                    </div>
-                    <div class="form-row">
-                        <input type="datetime-local" id="taskStartTime">
-                        <select id="taskPriority">
-                            <option value="1">High Priority</option>
-                            <option value="2" selected>Medium Priority</option>
-                            <option value="3">Low Priority</option>
-                        </select>
-                    </div>
-                    <button id="scheduleTaskBtn" class="btn-primary">Add Task</button>
-                </div>
-
-                <!-- Dynamic Calendar Overrun Simulation -->
-                <div class="webhook-simulator card overrun-card">
-                    <h3>Calendar Overrun Resolver</h3>
-                    <p class="description-text">Simulates a task exceeding its schedule. Remaining tasks shift dynamically.</p>
-                    <div class="form-row">
-                        <select id="overrunTaskSelect">
-                            <option value="">Select a task...</option>
-                        </select>
-                        <input type="number" id="overrunDuration" placeholder="New Duration (min)" value="150">
-                    </div>
-                    <button id="triggerOverrunBtn" class="btn-danger">Resolve Overrun Shift</button>
-                </div>
-
-                <!-- Calendar Timeline -->
-                <div class="feed-section">
-                    <h3>Daily Timeline Schedule</h3>
-                    <div class="timeline-container" id="calendarTimeline">
-                        <!-- Loaded dynamically -->
-                        <div class="stream-empty">No tasks scheduled.</div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <footer class="os-footer">
-        <p>&copy; 2026 AI Life & Wealth OS. Powered by Local Claude Code & SQLite. All data resides locally.</p>
-    </footer>
-
+            </section>
+        </main>
+    </div>
+    
     <!-- Frontend logic -->
     <script src="app.js"></script>
 </body>

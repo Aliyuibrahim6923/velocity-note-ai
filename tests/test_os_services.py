@@ -100,6 +100,24 @@ class TestAIOSServices(unittest.TestCase):
         self.assertEqual(webhook_result["transaction"]["is_verified"], 1)
         self.assertEqual(webhook_result["transaction"]["amount"], 45.50)
 
+    def test_bank_email_alert_ingestion(self):
+        # Email bank transaction alert
+        result = self.brain.receive_email_webhook(
+            sender="alerts@chase.com",
+            subject="Transaction Notification",
+            body="Your card was charged $15.50 at Starbucks"
+        )
+        
+        self.assertIsNotNone(result["id"])
+        
+        # Verify transaction database row
+        txs = self.wallet.get_transactions()
+        starbucks_tx = next((tx for tx in txs if "Starbucks" in tx["description"]), None)
+        self.assertIsNotNone(starbucks_tx)
+        self.assertEqual(starbucks_tx["amount"], 15.50)
+        self.assertEqual(starbucks_tx["is_verified"], 1) # Auto-verified bank email alert
+        self.assertEqual(starbucks_tx["source"], "email_alert")
+
     def test_hands_calendar_overrun_shifting(self):
         # 1. Schedule a fixed meeting
         t1_start = datetime(2026, 6, 4, 9, 0).isoformat()

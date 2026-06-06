@@ -171,7 +171,7 @@ class BrainService:
                 data.get("description", "Cash transaction"),
                 timestamp,
                 0, # is_predictive = false
-                0, # is_verified = false
+                1 if data.get("is_verified", False) else 0, # is_verified
                 timestamp
             )
         )

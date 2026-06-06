@@ -58,6 +58,28 @@ class LLMService:
                 }
             })
 
+        # 1.b Parse bank transaction alerts (e.g. "Alert: Card charge of $15.50 at Starbucks")
+        # OR "Debit of $120.00 at Shell"
+        alert_match = re.search(
+            r"(?:charge|charged|debit|debited|payment|spent|amount)\s+(?:[\w\s]{0,15}\s+)?(?:of\s+)?\$?(\d+(?:\.\d+)?)(?:\s+usd)?\s+at\s+([a-zA-Z0-9\s]{1,30})",
+            prompt_lower
+        )
+        if alert_match:
+            amount = float(alert_match.group(1))
+            merchant = alert_match.group(2).strip()
+            merchant_title = merchant.title()
+            return json.dumps({
+                "type": "transaction",
+                "data": {
+                    "amount": amount,
+                    "type": "expense",
+                    "category": "other",
+                    "description": f"Bank Alert: Card charge at {merchant_title}",
+                    "source": "email_alert",
+                    "is_verified": True
+                }
+            })
+
         # 2. Parse calendar reminder command (e.g. "Remind me Friday to call landlord")
         # "Remind me Friday to buy milk" or "Remind me Friday call landlord"
         remind_match = re.search(r"remind\s+me\s+([\w\s]+?)\s+to\s+(.+)", prompt_lower) or re.search(r"remind\s+me\s+([\w\s]+?)\s+(.+)", prompt_lower)
