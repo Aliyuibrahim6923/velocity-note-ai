@@ -187,7 +187,7 @@ export function FinancialDashboard() {
                   return (
                     <tr key={`ocr-${log.id}`} style={{borderBottom: '1px solid var(--border)'}}>
                       <td style={{padding: '0.75rem'}}>{new Date(log.created_at).toLocaleDateString()}</td>
-                      <td style={{padding: '0.75rem', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}} title={description}>
+                      <td style={{padding: '0.75rem', maxWidth: '300px', wordWrap: 'break-word', overflowWrap: 'break-word', whiteSpace: 'pre-wrap'}} title={description}>
                         {description}
                       </td>
                       <td style={{padding: '0.75rem'}}>
