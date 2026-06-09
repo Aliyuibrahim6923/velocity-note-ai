@@ -47,7 +47,7 @@ export const dbService = {
     });
   },
 
-  async queryItems({ searchTerm = '', category = 'ALL', sortOrder = 'desc', limit = 20, offset = 0 } = {}) {
+  async queryItems({ searchTerm = '', category = 'ALL', sortOrder = 'desc', filterMonth = 'ALL', limit = 20, offset = 0 } = {}) {
     const db = await initDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([STORE_NAME], 'readonly');
@@ -67,6 +67,12 @@ export const dbService = {
           let matches = true;
           if (category !== 'ALL' && item.category !== category) {
             matches = false;
+          }
+          if (filterMonth !== 'ALL') {
+            const itemMonth = new Date(item.created_at).getMonth().toString();
+            if (itemMonth !== filterMonth) {
+              matches = false;
+            }
           }
           if (searchTerm) {
             const term = searchTerm.toLowerCase();

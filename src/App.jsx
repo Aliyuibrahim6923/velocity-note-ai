@@ -18,6 +18,7 @@ function App() {
   
   // Phase 3 States
   const [activeFilter, setActiveFilter] = useState('ALL');
+  const [filterMonth, setFilterMonth] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('desc');
   const [offset, setOffset] = useState(0);
@@ -37,6 +38,7 @@ function App() {
       const data = await dbService.queryItems({
         searchTerm,
         category: activeFilter,
+        filterMonth,
         sortOrder,
         limit: LIMIT,
         offset: currentOffset
@@ -60,7 +62,7 @@ function App() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadItems(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeFilter, searchTerm, sortOrder]);
+  }, [activeFilter, searchTerm, sortOrder, filterMonth]);
 
   // Intersection Observer for Infinite Scroll
   useEffect(() => {
@@ -76,7 +78,7 @@ function App() {
 
     return () => observer.disconnect();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasMore, offset, activeFilter, searchTerm, sortOrder]);
+  }, [hasMore, offset, activeFilter, searchTerm, sortOrder, filterMonth]);
 
   useEffect(() => {
     initializeAlarms();
@@ -251,8 +253,23 @@ function App() {
               <option value="desc">Newest First</option>
               <option value="asc">Oldest First</option>
             </select>
+            <select className="sort-select" value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} style={{marginLeft: '0.5rem'}}>
+              <option value="ALL">All Months</option>
+              <option value="0">January</option>
+              <option value="1">February</option>
+              <option value="2">March</option>
+              <option value="3">April</option>
+              <option value="4">May</option>
+              <option value="5">June</option>
+              <option value="6">July</option>
+              <option value="7">August</option>
+              <option value="8">September</option>
+              <option value="9">October</option>
+              <option value="10">November</option>
+              <option value="11">December</option>
+            </select>
             
-            <button className={`filter-btn ${activeFilter === 'ALL' ? 'active' : ''}`} onClick={() => setActiveFilter('ALL')}>All</button>
+            <button className={`filter-btn ${activeFilter === 'ALL' ? 'active' : ''}`} onClick={() => setActiveFilter('ALL')} style={{marginLeft: '1rem'}}>All</button>
             <button className={`filter-btn ${activeFilter === 'ACTION_ITEM' ? 'active' : ''}`} onClick={() => setActiveFilter('ACTION_ITEM')}>Tasks</button>
             <button className={`filter-btn ${activeFilter === 'CALENDAR_EVENT' ? 'active' : ''}`} onClick={() => setActiveFilter('CALENDAR_EVENT')}>Events</button>
             <button className={`filter-btn ${activeFilter === 'FINANCIAL_LOG' ? 'active' : ''}`} onClick={() => setActiveFilter('FINANCIAL_LOG')}>Finance</button>
