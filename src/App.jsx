@@ -14,6 +14,8 @@ function App() {
   const [items, setItems] = useState([]);
   const [inputText, setInputText] = useState('');
   const [isRecording, setIsRecording] = useState(false);
+  const [googleToken, setGoogleToken] = useState(localStorage.getItem('googleToken'));
+  const [selectedImage, setSelectedImage] = useState(null);
   const [interimText, setInterimText] = useState('');
   
   // Phase 3 States
@@ -26,7 +28,6 @@ function App() {
   const LIMIT = 20;
 
   const [activeView, setActiveView] = useState('TIMELINE');
-  const [googleToken, setGoogleToken] = useState(null);
   const speechRef = useRef(null);
   const feedEndRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -181,41 +182,50 @@ function App() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const finalPayload = (inputText + ' ' + interimText).trim();
-    if (!finalPayload) return;
+    const currentInput = (inputText + ' ' + interimText).trim();
+    const currentImage = selectedImage;
+
+    if (!currentInput && !currentImage) return;
 
     // Clear UI instantly for zero-friction feel
     setInputText('');
     setInterimText('');
+    setSelectedImage(null);
     if (isRecording && speechRef.current) {
       speechRef.current.stop();
       setIsRecording(false);
     }
 
-    await processInput(finalPayload);
+    if (currentImage) {
+      const formData = new FormData();
+      formData.append('file', currentImage);
+      try {
+        const res = await fetch('/api/documents/upload', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          const finalPayload = currentInput 
+            ? `${currentInput}\n[SCANNED DOC]: ${data.extracted_text}`
+            : `[SCANNED DOC]: ${data.extracted_text}`;
+          await processInput(finalPayload);
+        }
+      } catch (err) {
+        console.error("Upload failed", err);
+      }
+    } else {
+      await processInput(currentInput);
+    }
   };
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      // 1. Send to Python Brain Service for OCR and Neo4j Graphing
-      const res = await fetch('/api/documents/upload', {
-        method: 'POST',
-        body: formData
-      });
-      const data = await res.json();
-      
-      if (data.status === 'success') {
-        // 2. Feed the extracted OCR text into the local AI triage engine
-        processInput(`[SCANNED DOC]: ${data.extracted_text}`);
-      }
-    } catch (err) {
-      console.error("Upload failed", err);
+    setSelectedImage(file);
+    // Reset the input so the same file can be selected again if needed
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -344,6 +354,16 @@ function App() {
 
       {activeView === 'TIMELINE' && (
         <div className="capture-stream">
+          {selectedImage && (
+            <div className="image-preview-container" style={{padding: '0.5rem 1rem', display: 'flex', position: 'relative', width: '100%', maxWidth: '800px', margin: '0 auto', boxSizing: 'border-box'}}>
+              <div style={{position: 'relative', display: 'inline-block'}}>
+                <img src={URL.createObjectURL(selectedImage)} alt="preview" style={{height: '60px', borderRadius: '8px', border: '1px solid var(--border)'}} />
+                <button 
+                  onClick={() => setSelectedImage(null)} 
+                  style={{position: 'absolute', top: '-8px', right: '-8px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '50%', cursor: 'pointer', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', color: 'var(--text-primary)'}}>✕</button>
+              </div>
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="input-row">
             <button 
               type="button" 
@@ -379,13 +399,13 @@ function App() {
             <input
               type="text"
               className="capture-input"
-              placeholder={isRecording ? "Listening..." : "Capture thought..."}
+              placeholder={isRecording ? "Listening..." : "Capture thought or describe image..."}
               value={isRecording ? (inputText + " " + interimText).trim() : inputText}
               onChange={(e) => {
                 if(!isRecording) setInputText(e.target.value);
               }}
             />
-            <button type="submit" className="send-button" style={{display: inputText.trim() || interimText.trim() ? 'flex' : 'none'}}>
+            <button type="submit" className="send-button" style={{display: inputText.trim() || interimText.trim() || selectedImage ? 'flex' : 'none'}}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="22" y1="2" x2="11" y2="13"></line>
                 <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>

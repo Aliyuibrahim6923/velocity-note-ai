@@ -92,7 +92,7 @@ describe('App Component', () => {
     
     triageInput.mockResolvedValue(mockNewItem);
 
-    const input = screen.getByPlaceholderText('Capture thought...');
+    const input = screen.getByPlaceholderText('Capture thought or describe image...');
     fireEvent.change(input, { target: { value: 'Buy milk' } });
     
     // Check if send button becomes visible and click it
