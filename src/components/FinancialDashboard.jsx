@@ -66,11 +66,11 @@ export function FinancialDashboard() {
           <div className="stat-value negative">-${stats.expense.toFixed(2)}</div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Owed to Me</div>
+          <div className="stat-label">Debt Money Coming In</div>
           <div className="stat-value" style={{color: '#3b82f6'}}>${stats.loansOwedToMe.toFixed(2)}</div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Owed by Me</div>
+          <div className="stat-label">My Debt</div>
           <div className="stat-value" style={{color: '#f59e0b'}}>${stats.loansOwedByMe.toFixed(2)}</div>
         </div>
       </div>
