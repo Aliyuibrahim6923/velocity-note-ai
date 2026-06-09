@@ -9,7 +9,7 @@ import { triageInput } from './services/ai';
 
 vi.mock('./services/db', () => ({
   dbService: {
-    getAllItems: vi.fn(),
+    queryItems: vi.fn(),
     saveItem: vi.fn(),
     deleteItem: vi.fn(),
   }
@@ -26,10 +26,18 @@ vi.mock('./services/speech', () => ({
   })),
 }));
 
+// Global mock for IntersectionObserver
+window.IntersectionObserver = class IntersectionObserver {
+  constructor() {}
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
+
 describe('App Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    dbService.getAllItems.mockResolvedValue([]);
+    dbService.queryItems.mockResolvedValue([]);
   });
 
   it('renders the header and empty state initially', async () => {
@@ -46,7 +54,7 @@ describe('App Component', () => {
   });
 
   it('loads items from db and renders them', async () => {
-    dbService.getAllItems.mockResolvedValue([{
+    dbService.queryItems.mockResolvedValue([{
       id: '1',
       raw_text: 'Test item',
       category: 'STATIC_INTEL',

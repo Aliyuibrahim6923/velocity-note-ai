@@ -47,20 +47,47 @@ export const dbService = {
     });
   },
 
-  async getAllItems() {
+  async queryItems({ searchTerm = '', category = 'ALL', sortOrder = 'desc', limit = 20, offset = 0 } = {}) {
     const db = await initDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([STORE_NAME], 'readonly');
       const store = transaction.objectStore(STORE_NAME);
       const index = store.index('created_at');
+      const direction = sortOrder === 'desc' ? 'prev' : 'next';
       
-      // Get all items and sort descending (newest first)
-      const request = index.getAll();
+      const request = index.openCursor(null, direction);
+      const results = [];
+      let matchCount = 0;
       
-      request.onsuccess = () => {
-        const result = request.result || [];
-        resolve(result.sort((a, b) => b.created_at - a.created_at));
+      request.onsuccess = (event) => {
+        const cursor = event.target.result;
+        if (cursor && results.length < limit) {
+          const item = cursor.value;
+          
+          let matches = true;
+          if (category !== 'ALL' && item.category !== category) {
+            matches = false;
+          }
+          if (searchTerm) {
+            const term = searchTerm.toLowerCase();
+            if (!item.raw_text.toLowerCase().includes(term)) {
+              matches = false;
+            }
+          }
+          
+          if (matches) {
+            if (matchCount >= offset) {
+              results.push(item);
+            }
+            matchCount++;
+          }
+          
+          cursor.continue();
+        } else {
+          resolve(results);
+        }
       };
+      
       request.onerror = () => reject(request.error);
     });
   },

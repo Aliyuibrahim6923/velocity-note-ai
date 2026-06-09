@@ -6,6 +6,7 @@ import { createSpeechRecognition } from './services/speech';
 import { initializeAlarms } from './services/alarms';
 import { syncItemToDrive } from './services/google';
 import { Settings } from './components/Settings';
+import { LogCard } from './components/LogCard';
 import './App.css';
 
 function App() {
@@ -13,25 +14,71 @@ function App() {
   const [inputText, setInputText] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [interimText, setInterimText] = useState('');
+  
+  // Phase 3 States
   const [activeFilter, setActiveFilter] = useState('ALL');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const LIMIT = 20;
+
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [googleToken, setGoogleToken] = useState(null);
   const speechRef = useRef(null);
   const feedEndRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  // Initialize DB and fetch items
-  useEffect(() => {
-    const loadItems = async () => {
-      try {
-        const data = await dbService.getAllItems();
+  // Fetch items with pagination and filters
+  const loadItems = async (reset = false) => {
+    try {
+      const currentOffset = reset ? 0 : offset;
+      const data = await dbService.queryItems({
+        searchTerm,
+        category: activeFilter,
+        sortOrder,
+        limit: LIMIT,
+        offset: currentOffset
+      });
+      
+      if (reset) {
         setItems(data);
-      } catch (e) {
-        console.error("Failed to load items", e);
+      } else {
+        setItems(prev => [...prev, ...data]);
       }
-    };
+      
+      setOffset(currentOffset + data.length);
+      setHasMore(data.length === LIMIT);
+    } catch (e) {
+      console.error("Failed to load items", e);
+    }
+  };
+
+  // Re-run search/filter completely on change
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadItems(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeFilter, searchTerm, sortOrder]);
+
+  // Intersection Observer for Infinite Scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && hasMore) {
+        loadItems(false);
+      }
+    }, { threshold: 1.0 });
+
+    if (feedEndRef.current) {
+      observer.observe(feedEndRef.current);
+    }
+
+    return () => observer.disconnect();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasMore, offset, activeFilter, searchTerm, sortOrder]);
+
+  useEffect(() => {
     initializeAlarms();
-    loadItems();
   }, []);
 
   // Initialize Speech Recognition
@@ -139,56 +186,7 @@ function App() {
     }
   };
 
-  const renderCard = (item) => {
-    const isAction = item.category === 'ACTION_ITEM';
-    const isEvent = item.category === 'CALENDAR_EVENT';
-    const isFinancial = item.category === 'FINANCIAL_LOG';
-    // isIntel is the default if others are false
-    
-    let cardClass = 'timeline-card ';
-    let badgeClass = 'card-badge ';
-    let badgeText;
 
-    if (isAction) { cardClass += 'card-action'; badgeClass += 'badge-action'; badgeText = 'Action'; }
-    else if (isEvent) { cardClass += 'card-event'; badgeClass += 'badge-event'; badgeText = 'Event'; }
-    else if (isFinancial) { cardClass += 'card-financial'; badgeClass += 'badge-financial'; badgeText = 'Finance'; }
-    else { cardClass += 'card-intel'; badgeClass += 'badge-intel'; badgeText = 'Intel'; }
-
-    let meta = {};
-    try {
-      meta = JSON.parse(item.metadata_json || '{}');
-    } catch { /* ignore */ }
-
-    return (
-      <div key={item.id} className={cardClass}>
-        <div className="card-header">
-          <span className={badgeClass}>{badgeText}</span>
-          <span>{new Date(item.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-        </div>
-        <div className="card-body">
-          {item.raw_text}
-        </div>
-        
-        {Object.keys(meta).length > 0 && (
-          <div className="card-meta">
-            {Object.entries(meta).map(([k, v]) => (
-              <span key={k} className="meta-pill">{k}: {v}</span>
-            ))}
-          </div>
-        )}
-        
-        {/* Simplified Interaction buttons for MVP */}
-        <div style={{display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem'}}>
-          <button 
-            onClick={() => handleDelete(item.id)}
-            style={{background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.8rem'}}
-          >
-            Dismiss
-          </button>
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div className="os-container">
@@ -208,6 +206,18 @@ function App() {
       </header>
 
       <div className="filter-bar">
+        <input 
+          type="text" 
+          className="search-input" 
+          placeholder="Search..." 
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <select className="sort-select" value={sortOrder} onChange={(e) => setSortOrder(e.target.value)}>
+          <option value="desc">Newest First</option>
+          <option value="asc">Oldest First</option>
+        </select>
+        
         <button className={`filter-btn ${activeFilter === 'ALL' ? 'active' : ''}`} onClick={() => setActiveFilter('ALL')}>All</button>
         <button className={`filter-btn ${activeFilter === 'ACTION_ITEM' ? 'active' : ''}`} onClick={() => setActiveFilter('ACTION_ITEM')}>Tasks</button>
         <button className={`filter-btn ${activeFilter === 'CALENDAR_EVENT' ? 'active' : ''}`} onClick={() => setActiveFilter('CALENDAR_EVENT')}>Events</button>
@@ -216,15 +226,18 @@ function App() {
       </div>
 
       <main className="feed-container">
-        {items.length === 0 ? (
+        {items.length === 0 && !hasMore ? (
           <div className="empty-state">
             <div className="empty-icon">⚡️</div>
             <p>Your mind, structured instantly.<br/>Tap the mic or type to capture a thought.</p>
           </div>
         ) : (
-          items.filter(item => activeFilter === 'ALL' || item.category === activeFilter).map(renderCard)
+          items.map((item) => (
+            <LogCard key={item.id} item={item} onDelete={handleDelete} />
+          ))
         )}
-        <div ref={feedEndRef} />
+        {hasMore && <div className="loading-indicator">Loading...</div>}
+        <div ref={feedEndRef} style={{ height: '120px' }} />
       </main>
 
       <div className="capture-stream">

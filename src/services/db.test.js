@@ -15,7 +15,7 @@ describe('Database Service (IndexedDB)', () => {
     };
     
     await dbService.saveItem(mockItem);
-    const items = await dbService.getAllItems();
+    const items = await dbService.queryItems();
     
     expect(items.length).toBeGreaterThan(0);
     expect(items.find(i => i.id === '123')).toBeDefined();
@@ -35,7 +35,7 @@ describe('Database Service (IndexedDB)', () => {
     
     await dbService.saveItem(mockItem);
     await dbService.deleteItem('456');
-    const items = await dbService.getAllItems();
+    const items = await dbService.queryItems();
     
     expect(items.find(i => i.id === '456')).toBeUndefined();
   });
