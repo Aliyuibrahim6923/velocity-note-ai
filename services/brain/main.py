@@ -18,10 +18,10 @@ async def upload_document(file: UploadFile = File(...)):
     try:
         contents = await file.read()
         
-        # 1. OCR Extraction
-        text = ocr.extract_text_from_image(contents)
+        # 1. Extraction Router
+        text = ocr.extract_text_from_file(contents, file.filename, file.content_type)
         if not text:
-            raise HTTPException(status_code=400, detail="Could not extract text from image")
+            raise HTTPException(status_code=400, detail="Could not extract text from the provided file.")
             
         # 2. Graphing (Phase 2 MVP: just save as a Document node)
         node_id = graph.create_document_node(text=text, category="SCANNED_DOC")

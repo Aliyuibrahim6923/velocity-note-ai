@@ -385,7 +385,20 @@ function App() {
           {selectedImage && (
             <div className="image-preview-container" style={{padding: '0.5rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%', maxWidth: '800px', margin: '0 auto', boxSizing: 'border-box'}}>
               <div style={{position: 'relative', display: 'inline-block', alignSelf: 'flex-start'}}>
-                <img src={URL.createObjectURL(selectedImage)} alt="preview" style={{height: '60px', borderRadius: '8px', border: '1px solid var(--border)'}} />
+                {selectedImage.type.startsWith('image/') ? (
+                  <img src={URL.createObjectURL(selectedImage)} alt="preview" style={{height: '60px', borderRadius: '8px', border: '1px solid var(--border)'}} />
+                ) : (
+                  <div style={{
+                    height: '60px', padding: '0 1rem', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(10px)',
+                    borderRadius: '8px', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0.5rem',
+                    color: 'var(--text-primary)', fontWeight: 'bold', fontSize: '0.9rem'
+                  }}>
+                    <span style={{fontSize: '1.5rem'}}>📄</span>
+                    <span style={{maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
+                      {selectedImage.name}
+                    </span>
+                  </div>
+                )}
                 <button 
                   onClick={() => setSelectedImage(null)} 
                   style={{position: 'absolute', top: '-8px', right: '-8px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '50%', cursor: 'pointer', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', color: 'var(--text-primary)'}}>✕</button>
@@ -442,7 +455,7 @@ function App() {
               type="file" 
               ref={fileInputRef} 
               style={{ display: 'none' }} 
-              accept="image/*" 
+              accept="image/*,application/pdf,text/plain,.csv,.doc,.docx" 
               onChange={handleImageUpload} 
             />
             <input
