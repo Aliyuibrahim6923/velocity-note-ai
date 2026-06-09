@@ -45,15 +45,24 @@ const deterministicTriage = (rawText, normalized) => {
   let priority = 'LOW';
   let metadata = {};
 
+  const isOcr = rawText.includes('[SCANNED DOC]');
+  if (isOcr) metadata.is_ocr = true;
+
+  // Extract explicit tag if present
+  const tagMatch = rawText.match(/\[TAG:\s*([^\]]+)\]/i);
+  let explicitTag = tagMatch ? tagMatch[1].toLowerCase().trim() : null;
+
   // Financial heuristics
   const amountMatch = normalized.match(/((?:\$|€|£|₦)?\d+(?:,\d+)?(?:\.\d+)?(?:k|m|b)?)/i);
   
-  const isIncome = /\b(received|got|earned|paid me|income)\b/i.test(normalized);
-  const isExpense = /\b(paid|spend|spent|cost|bought|buy|charge|charged|price|gift|donate|transferred)\b/i.test(normalized);
-  const isLoanLent = /\b(lent|loaned|owing me|owe me)\b/i.test(normalized);
+  const isIncome = /\b(received|got|earned|paid me|income)\b/i.test(normalized) || explicitTag === 'incoming' || explicitTag === 'business incomes' || explicitTag === 'other incomes';
+  const isExpense = /\b(paid|spend|spent|cost|bought|buy|charge|charged|price|gift|donate|transferred)\b/i.test(normalized) || explicitTag === 'general expenses';
+  const isLoanLent = /\b(lent|loaned|owing me|owe me)\b/i.test(normalized) || explicitTag === 'loan given to others';
   const isLoanBorrowed = /\b(borrowed|i owe|owe them|owe.*to)\b/i.test(normalized);
+  const isDebtPaid = explicitTag === 'paid debt to others';
+  const isLoanRepaymentReceived = explicitTag === 'loan repayment by others';
   
-  const isFinancial = (isIncome || isExpense || isLoanLent || isLoanBorrowed) && amountMatch;
+  const isFinancial = (isIncome || isExpense || isLoanLent || isLoanBorrowed || isDebtPaid || isLoanRepaymentReceived) && (amountMatch || explicitTag);
 
   // Calendar heuristics
   const isEvent = /\b(meeting|dinner|lunch|appointment|schedule|tomorrow|today at|pm|am)\b/i.test(normalized) && !/\b(remind)\b/i.test(normalized);
@@ -79,9 +88,16 @@ const deterministicTriage = (rawText, normalized) => {
     if (isIncome) type = 'income';
     if (isLoanLent) type = 'loan_lent';
     if (isLoanBorrowed) type = 'loan_borrowed';
+    if (isDebtPaid) type = 'debt_paid';
+    if (isLoanRepaymentReceived) type = 'loan_repayment_received';
+    
+    if (explicitTag === 'business incomes') type = 'income_business';
+    if (explicitTag === 'other incomes') type = 'income_other';
+    if (explicitTag === 'general expenses') type = 'expense_general';
     
     metadata.amount = parsedAmount;
     metadata.type = type;
+    metadata.financial_tag = explicitTag || type;
     
     // Simple payee extraction
     const payeeMatch = normalized.match(/(?:paid|bought|gifted|transferred to|lent to|borrowed from)\s+(?:from\s+)?(\w+)/i);

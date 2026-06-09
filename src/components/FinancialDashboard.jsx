@@ -25,7 +25,13 @@ export function FinancialDashboard() {
               loansOwedToMe += Math.abs(amount);
             } else if (meta.type === 'loan_borrowed') {
               loansOwedByMe += Math.abs(amount);
-            } else if (meta.type === 'income' || (amount > 0 && !meta.type)) {
+            } else if (meta.type === 'debt_paid') {
+              loansOwedByMe -= Math.abs(amount);
+              expense += Math.abs(amount); // It's still money leaving your pocket
+            } else if (meta.type === 'loan_repayment_received') {
+              loansOwedToMe -= Math.abs(amount);
+              income += Math.abs(amount); // Money entering your pocket
+            } else if (meta.type === 'income' || meta.type === 'income_business' || meta.type === 'income_other' || (amount > 0 && !meta.type)) {
               income += Math.abs(amount);
             } else {
               expense += Math.abs(amount);
@@ -47,8 +53,7 @@ export function FinancialDashboard() {
     try {
       await dbService.deleteItem(id);
       setLogs(prev => prev.filter(log => log.id !== id));
-      // Re-calculate stats could be done by re-running fetchFinances or manually
-      // For simplicity, we just reload the data completely
+      
       const data = await dbService.queryItems({ category: 'FINANCIAL_LOG' });
       setLogs(data);
       let income = 0, expense = 0, loansOwedByMe = 0, loansOwedToMe = 0;
@@ -56,9 +61,12 @@ export function FinancialDashboard() {
         try {
           const meta = JSON.parse(item.metadata_json);
           const amount = parseFloat(meta.amount || 0);
+          
           if (meta.type === 'loan_lent') loansOwedToMe += Math.abs(amount);
           else if (meta.type === 'loan_borrowed') loansOwedByMe += Math.abs(amount);
-          else if (meta.type === 'income' || (amount > 0 && !meta.type)) income += Math.abs(amount);
+          else if (meta.type === 'debt_paid') { loansOwedByMe -= Math.abs(amount); expense += Math.abs(amount); }
+          else if (meta.type === 'loan_repayment_received') { loansOwedToMe -= Math.abs(amount); income += Math.abs(amount); }
+          else if (meta.type === 'income' || meta.type === 'income_business' || meta.type === 'income_other' || (amount > 0 && !meta.type)) income += Math.abs(amount);
           else expense += Math.abs(amount);
         } catch (err) { console.warn("Failed to parse metadata", err); }
       });
@@ -142,6 +150,70 @@ export function FinancialDashboard() {
               </div>
             );
           })
+        )}
+      </div>
+
+      <div className="transactions-list" style={{marginTop: '2rem'}}>
+        <h3>Scanned Document Records</h3>
+        {logs.filter(log => {
+          try { return JSON.parse(log.metadata_json).is_ocr; } catch { return false; }
+        }).length === 0 ? (
+          <div className="empty-state">
+            <p>No scanned financial documents found.</p>
+          </div>
+        ) : (
+          <div style={{overflowX: 'auto'}}>
+            <table style={{width: '100%', borderCollapse: 'collapse', marginTop: '1rem', textAlign: 'left'}}>
+              <thead>
+                <tr style={{borderBottom: '1px solid var(--border)'}}>
+                  <th style={{padding: '0.75rem', fontWeight: 600}}>Date</th>
+                  <th style={{padding: '0.75rem', fontWeight: 600}}>Description</th>
+                  <th style={{padding: '0.75rem', fontWeight: 600}}>Tag</th>
+                  <th style={{padding: '0.75rem', fontWeight: 600}}>Amount</th>
+                  <th style={{padding: '0.75rem', fontWeight: 600, textAlign: 'right'}}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {logs.filter(log => {
+                  try { return JSON.parse(log.metadata_json).is_ocr; } catch { return false; }
+                }).map(log => {
+                  let meta = {};
+                  try { meta = JSON.parse(log.metadata_json); } catch { /* ignore */ }
+                  
+                  // Extract just the user's typed description before the [SCANNED DOC] or [TAG] part
+                  const descMatch = log.raw_text.split(/\[TAG:|\[SCANNED DOC\]/i)[0].trim();
+                  const description = descMatch || 'Untitled Scanned Document';
+                  
+                  return (
+                    <tr key={`ocr-${log.id}`} style={{borderBottom: '1px solid var(--border)'}}>
+                      <td style={{padding: '0.75rem'}}>{new Date(log.created_at).toLocaleDateString()}</td>
+                      <td style={{padding: '0.75rem', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}} title={description}>
+                        {description}
+                      </td>
+                      <td style={{padding: '0.75rem'}}>
+                        {meta.financial_tag && (
+                          <span style={{background: 'var(--text-primary)', color: 'var(--bg-card)', padding: '2px 8px', borderRadius: '12px', fontSize: '0.7rem'}}>
+                            {meta.financial_tag}
+                          </span>
+                        )}
+                      </td>
+                      <td style={{padding: '0.75rem'}}>
+                        {meta.amount ? `$${Math.abs(meta.amount).toFixed(2)}` : '-'}
+                      </td>
+                      <td style={{padding: '0.75rem', textAlign: 'right'}}>
+                        <button 
+                          onClick={() => alert(log.raw_text)}
+                          style={{background: 'none', border: '1px solid var(--border)', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer', fontSize: '0.75rem', color: 'var(--text-primary)'}}
+                        >
+                          View OCR
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

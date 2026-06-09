@@ -16,6 +16,7 @@ function App() {
   const [isRecording, setIsRecording] = useState(false);
   const [googleToken, setGoogleToken] = useState(localStorage.getItem('googleToken'));
   const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedTag, setSelectedTag] = useState('');
   const [interimText, setInterimText] = useState('');
   
   // Phase 3 States
@@ -200,6 +201,8 @@ function App() {
     setInputText('');
     setInterimText('');
     setSelectedImage(null);
+    const tagToApply = selectedTag;
+    setSelectedTag('');
     if (isRecording && speechRef.current) {
       speechRef.current.stop();
       setIsRecording(false);
@@ -218,8 +221,11 @@ function App() {
         });
         const data = await res.json();
         if (data.status === 'success') {
-          const finalPayload = currentInput 
-            ? `${currentInput}\n[SCANNED DOC]: ${data.extracted_text}`
+          let baseText = currentInput;
+          if (tagToApply) baseText = `${baseText} [TAG: ${tagToApply}]`.trim();
+          
+          const finalPayload = baseText 
+            ? `${baseText}\n[SCANNED DOC]: ${data.extracted_text}`
             : `[SCANNED DOC]: ${data.extracted_text}`;
           await processInput(finalPayload);
         } else {
@@ -377,12 +383,28 @@ function App() {
       {activeView === 'TIMELINE' && (
         <div className="capture-stream">
           {selectedImage && (
-            <div className="image-preview-container" style={{padding: '0.5rem 1rem', display: 'flex', position: 'relative', width: '100%', maxWidth: '800px', margin: '0 auto', boxSizing: 'border-box'}}>
-              <div style={{position: 'relative', display: 'inline-block'}}>
+            <div className="image-preview-container" style={{padding: '0.5rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%', maxWidth: '800px', margin: '0 auto', boxSizing: 'border-box'}}>
+              <div style={{position: 'relative', display: 'inline-block', alignSelf: 'flex-start'}}>
                 <img src={URL.createObjectURL(selectedImage)} alt="preview" style={{height: '60px', borderRadius: '8px', border: '1px solid var(--border)'}} />
                 <button 
                   onClick={() => setSelectedImage(null)} 
                   style={{position: 'absolute', top: '-8px', right: '-8px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '50%', cursor: 'pointer', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', color: 'var(--text-primary)'}}>✕</button>
+              </div>
+              <div className="tag-selector" style={{display: 'flex', flexWrap: 'wrap', gap: '0.5rem'}}>
+                {['incoming', 'business incomes', 'other incomes', 'general expenses', 'loan given to others', 'loan repayment by others', 'paid debt to others'].map(tag => (
+                  <button 
+                    key={tag}
+                    type="button"
+                    onClick={() => setSelectedTag(tag === selectedTag ? '' : tag)}
+                    style={{
+                      padding: '4px 8px', borderRadius: '12px', fontSize: '0.75rem', border: '1px solid var(--border)', cursor: 'pointer',
+                      background: selectedTag === tag ? 'var(--text-primary)' : 'var(--bg-card)',
+                      color: selectedTag === tag ? 'var(--bg-card)' : 'var(--text-primary)'
+                    }}
+                  >
+                    {tag}
+                  </button>
+                ))}
               </div>
             </div>
           )}
