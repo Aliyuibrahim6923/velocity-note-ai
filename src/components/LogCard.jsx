@@ -1,7 +1,7 @@
 // eslint-disable-next-line no-unused-vars
 import React, { useState } from 'react';
 
-export function LogCard({ item, onDelete, onUpdate }) {
+export function LogCard({ item, onDelete, onUpdate, onComplete }) {
   const [expanded, setExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(item.raw_text || '');
@@ -20,6 +20,13 @@ export function LogCard({ item, onDelete, onUpdate }) {
   const isEvent = item.category === 'CALENDAR_EVENT';
   const isFinancial = item.category === 'FINANCIAL_LOG';
   
+  let meta = {};
+  try {
+    meta = JSON.parse(item.metadata_json || '{}');
+  } catch { /* ignore */ }
+
+  const isCompleted = meta.completed === true;
+  
   let cardClass = 'timeline-card ';
   let badgeClass = 'card-badge ';
   let badgeText = 'Intel';
@@ -29,22 +36,21 @@ export function LogCard({ item, onDelete, onUpdate }) {
   else if (isFinancial) { cardClass += 'card-financial'; badgeClass += 'badge-financial'; badgeText = 'Finance'; }
   else { cardClass += 'card-intel'; badgeClass += 'badge-intel'; }
 
-  let meta = {};
-  try {
-    meta = JSON.parse(item.metadata_json || '{}');
-  } catch { /* ignore */ }
+  if (isCompleted) {
+    cardClass += ' completed-card';
+  }
 
   const CHAR_LIMIT = 150;
   const shouldTruncate = item.raw_text && item.raw_text.length > CHAR_LIMIT;
   const displayText = expanded ? item.raw_text : (item.raw_text ? item.raw_text.slice(0, CHAR_LIMIT) : '') + (shouldTruncate ? '...' : '');
 
   return (
-    <div className={cardClass}>
+    <div className={cardClass} style={isCompleted ? {opacity: 0.6} : {}}>
       <div className="card-header">
         <span className={badgeClass}>{badgeText}</span>
         <span>{new Date(item.created_at).toLocaleString([], {month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit'})}</span>
       </div>
-      <div className="card-body">
+      <div className="card-body" style={isCompleted ? {textDecoration: 'line-through'} : {}}>
         {isEditing ? (
           <textarea
             value={editText}
@@ -69,7 +75,7 @@ export function LogCard({ item, onDelete, onUpdate }) {
       {Object.keys(meta).length > 0 && !isEditing && (
         <div className="card-meta">
           {Object.entries(meta).map(([k, v]) => (
-            <span key={k} className="meta-pill">{k}: {v}</span>
+            k !== 'completed' && <span key={k} className="meta-pill">{k}: {v}</span>
           ))}
         </div>
       )}
@@ -82,6 +88,9 @@ export function LogCard({ item, onDelete, onUpdate }) {
           </>
         ) : (
           <>
+            {isAction && !isCompleted && (
+              <button onClick={() => onComplete(item.id)} style={{background: 'none', border: 'none', color: '#10b981', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold'}}>Complete</button>
+            )}
             <button onClick={() => setIsEditing(true)} style={{background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.8rem'}}>Edit</button>
             <button onClick={() => onDelete(item.id)} style={{background: 'none', border: 'none', color: 'var(--error, #ef4444)', cursor: 'pointer', fontSize: '0.8rem'}}>Delete</button>
           </>

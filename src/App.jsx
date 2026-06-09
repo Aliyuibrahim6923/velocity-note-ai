@@ -232,11 +232,38 @@ function App() {
     try {
       const itemToUpdate = items.find(i => i.id === id);
       if (!itemToUpdate) return;
-      const updatedItem = { ...itemToUpdate, raw_text: newText };
+      
+      // Re-run AI triage to get updated category and metadata
+      const triagedItem = await triageInput(newText);
+      
+      const updatedItem = { 
+        ...triagedItem,
+        id: itemToUpdate.id, // Preserve original ID
+        created_at: itemToUpdate.created_at // Preserve original creation time
+      };
+      
       await dbService.saveItem(updatedItem);
       setItems(prev => prev.map(item => item.id === id ? updatedItem : item));
     } catch (e) {
       console.error("Failed to update", e);
+    }
+  };
+
+  const handleComplete = async (id) => {
+    try {
+      const itemToUpdate = items.find(i => i.id === id);
+      if (!itemToUpdate) return;
+      
+      let meta = {};
+      try { meta = JSON.parse(itemToUpdate.metadata_json || '{}'); } catch { /* ignore */ }
+      
+      meta.completed = true;
+      const updatedItem = { ...itemToUpdate, metadata_json: JSON.stringify(meta) };
+      
+      await dbService.saveItem(updatedItem);
+      setItems(prev => prev.map(item => item.id === id ? updatedItem : item));
+    } catch (e) {
+      console.error("Failed to complete", e);
     }
   };
 
@@ -303,7 +330,7 @@ function App() {
           </div>
         ) : (
           items.map((item) => (
-            <LogCard key={item.id} item={item} onDelete={handleDelete} onUpdate={handleUpdate} />
+            <LogCard key={item.id} item={item} onDelete={handleDelete} onUpdate={handleUpdate} onComplete={handleComplete} />
           ))
         )}
         {hasMore && <div className="loading-indicator">Loading...</div>}
