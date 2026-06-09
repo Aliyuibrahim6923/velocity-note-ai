@@ -46,7 +46,8 @@ export function LogCard({ item, onDelete, onUpdate, onComplete }) {
   const shouldTruncate = item.raw_text && item.raw_text.length > CHAR_LIMIT;
   const displayText = expanded ? item.raw_text : (item.raw_text ? item.raw_text.slice(0, CHAR_LIMIT) : '') + (shouldTruncate ? '...' : '');
 
-  // Close menu when clicking outside (simple approach: close on any action)
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
   const executeAction = (actionFn) => {
     actionFn();
     setShowMenu(false);
@@ -58,6 +59,15 @@ export function LogCard({ item, onDelete, onUpdate, onComplete }) {
         <span className={badgeClass}>{badgeText}</span>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem', position: 'relative' }}>
           <span>{new Date(item.created_at).toLocaleString([], {month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit'})}</span>
+          
+          <button 
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.2rem', padding: '0 4px', lineHeight: '1', display: 'flex', alignItems: 'center' }}
+            title={isCollapsed ? "Expand" : "Collapse"}
+          >
+            {isCollapsed ? '⌄' : '⌃'}
+          </button>
+
           {!isEditing && (
             <button 
               onClick={() => setShowMenu(!showMenu)}
@@ -104,41 +114,46 @@ export function LogCard({ item, onDelete, onUpdate, onComplete }) {
           )}
         </div>
       </div>
-      <div className="card-body" style={isCompleted ? {textDecoration: 'line-through'} : {}}>
-        {isEditing ? (
-          <textarea
-            value={editText}
-            onChange={(e) => setEditText(e.target.value)}
-            style={{ width: '100%', minHeight: '80px', padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)', marginBottom: '0.5rem', fontFamily: 'inherit' }}
-          />
-        ) : (
-          <>
-            {displayText}
-            {shouldTruncate && (
-              <button 
-                style={{display: 'inline', background: 'none', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', marginLeft: '0.5rem', fontWeight: 'bold'}}
-                onClick={() => setExpanded(!expanded)}
-              >
-                {expanded ? 'Show Less' : 'Show More'}
-              </button>
+      
+      {!isCollapsed && (
+        <>
+          <div className="card-body" style={isCompleted ? {textDecoration: 'line-through'} : {}}>
+            {isEditing ? (
+              <textarea
+                value={editText}
+                onChange={(e) => setEditText(e.target.value)}
+                style={{ width: '100%', minHeight: '80px', padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)', marginBottom: '0.5rem', fontFamily: 'inherit' }}
+              />
+            ) : (
+              <>
+                {displayText}
+                {shouldTruncate && (
+                  <button 
+                    style={{display: 'inline', background: 'none', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', marginLeft: '0.5rem', fontWeight: 'bold'}}
+                    onClick={() => setExpanded(!expanded)}
+                  >
+                    {expanded ? 'Show Less' : 'Show More'}
+                  </button>
+                )}
+              </>
             )}
-          </>
-        )}
-      </div>
-      
-      {Object.keys(meta).length > 0 && !isEditing && (
-        <div className="card-meta">
-          {Object.entries(meta).map(([k, v]) => (
-            k !== 'completed' && <span key={k} className="meta-pill">{k}: {v}</span>
-          ))}
-        </div>
-      )}
-      
-      {isEditing && (
-        <div style={{display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem', gap: '0.5rem'}}>
-          <button onClick={handleCancel} style={{background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.8rem'}}>Cancel</button>
-          <button onClick={handleSave} style={{background: 'var(--accent-primary)', border: 'none', color: 'white', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold'}}>Save</button>
-        </div>
+          </div>
+          
+          {Object.keys(meta).length > 0 && !isEditing && (
+            <div className="card-meta">
+              {Object.entries(meta).map(([k, v]) => (
+                k !== 'completed' && <span key={k} className="meta-pill">{k}: {v}</span>
+              ))}
+            </div>
+          )}
+          
+          {isEditing && (
+            <div style={{display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem', gap: '0.5rem'}}>
+              <button onClick={handleCancel} style={{background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.8rem'}}>Cancel</button>
+              <button onClick={handleSave} style={{background: 'var(--accent-primary)', border: 'none', color: 'white', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold'}}>Save</button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
