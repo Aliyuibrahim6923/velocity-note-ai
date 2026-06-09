@@ -5,8 +5,7 @@ export function LogCard({ item, onDelete, onUpdate, onComplete }) {
   const [expanded, setExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(item.raw_text || '');
-
-  const [showMenu, setShowMenu] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const handleSave = () => {
     if (onUpdate) onUpdate(item.id, editText);
@@ -46,72 +45,66 @@ export function LogCard({ item, onDelete, onUpdate, onComplete }) {
   const shouldTruncate = item.raw_text && item.raw_text.length > CHAR_LIMIT;
   const displayText = expanded ? item.raw_text : (item.raw_text ? item.raw_text.slice(0, CHAR_LIMIT) : '') + (shouldTruncate ? '...' : '');
 
-  const [isCollapsed, setIsCollapsed] = useState(false);
 
-  const executeAction = (actionFn) => {
-    actionFn();
-    setShowMenu(false);
+
+  // Handle actions directly
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleComplete = () => {
+    onComplete(item.id);
+  };
+
+  const handleDelete = () => {
+    if (window.confirm("Are you sure you want to delete this log?")) {
+      onDelete(item.id);
+    }
   };
 
   return (
     <div className={cardClass} style={{ ...(isCompleted ? {opacity: 0.6} : {}), position: 'relative' }}>
       <div className="card-header" style={{ display: 'flex', alignItems: 'center' }}>
         <span className={badgeClass}>{badgeText}</span>
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem', position: 'relative' }}>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
           <span>{new Date(item.created_at).toLocaleString([], {month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit'})}</span>
           
-          <button 
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.2rem', padding: '0 4px', lineHeight: '1', display: 'flex', alignItems: 'center' }}
-            title={isCollapsed ? "Expand" : "Collapse"}
-          >
-            {isCollapsed ? '⌄' : '⌃'}
-          </button>
-
-          {!isEditing && (
+          <div style={{ display: 'flex', gap: '0.4rem', borderLeft: '1px solid var(--border)', paddingLeft: '0.6rem', marginLeft: '0.2rem' }}>
+            {isAction && !isCompleted && !isEditing && (
+              <button 
+                onClick={handleComplete}
+                title="Complete Action"
+                style={{ background: 'none', border: 'none', color: '#10b981', cursor: 'pointer', fontSize: '1rem', padding: '0', lineHeight: '1' }}
+              >
+                ✓
+              </button>
+            )}
+            {!isEditing && (
+              <button 
+                onClick={handleEdit}
+                title="Edit Log"
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1rem', padding: '0', lineHeight: '1' }}
+              >
+                ✎
+              </button>
+            )}
+            {!isEditing && (
+              <button 
+                onClick={handleDelete}
+                title="Delete Log"
+                style={{ background: 'none', border: 'none', color: 'var(--error, #ef4444)', cursor: 'pointer', fontSize: '1rem', padding: '0', lineHeight: '1' }}
+              >
+                ✕
+              </button>
+            )}
             <button 
-              onClick={() => setShowMenu(!showMenu)}
-              style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.2rem', padding: '0 4px', lineHeight: '1' }}
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.2rem', padding: '0', lineHeight: '1', display: 'flex', alignItems: 'center', marginLeft: '0.2rem' }}
+              title={isCollapsed ? "Expand" : "Collapse"}
             >
-              ⋮
+              {isCollapsed ? '⌄' : '⌃'}
             </button>
-          )}
-          
-          {showMenu && !isEditing && (
-            <div style={{
-              position: 'absolute', top: '100%', right: '0', background: 'var(--bg-card)', 
-              border: '1px solid var(--border)', borderRadius: '8px', padding: '4px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 10, minWidth: '120px',
-              display: 'flex', flexDirection: 'column'
-            }}>
-              {isAction && !isCompleted && (
-                <button 
-                  onClick={() => executeAction(() => onComplete(item.id))} 
-                  style={{background: 'none', border: 'none', color: '#10b981', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 'bold', padding: '8px', textAlign: 'left', borderRadius: '4px'}}
-                  onMouseOver={(e) => e.target.style.background = 'rgba(16, 185, 129, 0.1)'}
-                  onMouseOut={(e) => e.target.style.background = 'none'}
-                >
-                  ✓ Complete
-                </button>
-              )}
-              <button 
-                onClick={() => executeAction(() => setIsEditing(true))} 
-                style={{background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.85rem', padding: '8px', textAlign: 'left', borderRadius: '4px'}}
-                onMouseOver={(e) => e.target.style.background = 'var(--panel-bg)'}
-                onMouseOut={(e) => e.target.style.background = 'none'}
-              >
-                ✎ Edit
-              </button>
-              <button 
-                onClick={() => executeAction(() => onDelete(item.id))} 
-                style={{background: 'none', border: 'none', color: 'var(--error, #ef4444)', cursor: 'pointer', fontSize: '0.85rem', padding: '8px', textAlign: 'left', borderRadius: '4px'}}
-                onMouseOver={(e) => e.target.style.background = 'rgba(239, 68, 68, 0.1)'}
-                onMouseOut={(e) => e.target.style.background = 'none'}
-              >
-                🗑 Delete
-              </button>
-            </div>
-          )}
+          </div>
         </div>
       </div>
       

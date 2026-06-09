@@ -147,8 +147,9 @@ function App() {
 
         if (newItem.category === 'CALENDAR_EVENT' && googleToken) {
           try {
-            const handsUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-              ? '' : 'http://127.0.0.1:8002';
+            const hostname = window.location.hostname;
+            const isLocal = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.') || hostname.startsWith('10.');
+            const handsUrl = isLocal ? '' : 'http://127.0.0.1:8002';
             
             await fetch(`${handsUrl}/api/hands/schedule`, {
               method: 'POST',
@@ -212,8 +213,9 @@ function App() {
       const formData = new FormData();
       formData.append('file', currentImage);
       try {
-        const brainUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-          ? '' : 'http://127.0.0.1:8001';
+        const hostname = window.location.hostname;
+        const isLocal = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.') || hostname.startsWith('10.');
+        const brainUrl = isLocal ? '' : 'http://127.0.0.1:8001';
           
         const res = await fetch(`${brainUrl}/api/documents/upload`, {
           method: 'POST',

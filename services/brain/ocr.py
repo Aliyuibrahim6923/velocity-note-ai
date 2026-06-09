@@ -5,13 +5,14 @@ import io
 def extract_text_from_file(file_bytes: bytes, filename: str, content_type: str) -> str:
     try:
         content_type_lower = content_type.lower() if content_type else ""
+        filename_lower = filename.lower() if filename else ""
         
         # 1. Plain Text
-        if "text/" in content_type_lower or filename.endswith('.txt') or filename.endswith('.csv'):
+        if "text/" in content_type_lower or filename_lower.endswith('.txt') or filename_lower.endswith('.csv'):
             return file_bytes.decode('utf-8').strip()
             
         # 2. PDF Documents
-        if "pdf" in content_type_lower or filename.endswith('.pdf'):
+        if "pdf" in content_type_lower or filename_lower.endswith('.pdf'):
             try:
                 import fitz  # PyMuPDF
                 doc = fitz.open(stream=file_bytes, filetype="pdf")
