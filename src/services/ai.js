@@ -53,7 +53,7 @@ const deterministicTriage = (rawText, normalized) => {
   let explicitTag = tagMatch ? tagMatch[1].toLowerCase().trim() : null;
 
   // Financial heuristics
-  const amountMatch = normalized.match(/((?:\$|€|£|₦)?\d+(?:,\d+)?(?:\.\d+)?(?:k|m|b)?)/i);
+  let amountMatch = normalized.match(/((?:\$|€|£|₦)?\d+(?:,\d+)?(?:\.\d+)?(?:k|m|b)?)/i);
   
   const isIncome = /\b(received|got|earned|paid me|income)\b/i.test(normalized) || explicitTag === 'incoming' || explicitTag === 'business incomes' || explicitTag === 'other incomes';
   const isExpense = /\b(paid|spend|spent|cost|bought|buy|charge|charged|price|gift|donate|transferred)\b/i.test(normalized) || explicitTag === 'general expenses';
@@ -75,7 +75,32 @@ const deterministicTriage = (rawText, normalized) => {
     priority = 'NORMAL';
     
     let parsedAmount = null;
-    if (amountMatch) {
+    
+    // First, look for an explicit Total / Amount / Sum near the number
+    const explicitTotalMatch = normalized.match(/\b(?:total|sum|amount|due|paid)\s*[:=-]?\s*(?:\$|€|£|₦)?\s*(\d+(?:,\d+)*(?:\.\d+)?(?:k|m|b)?)/i);
+    if (explicitTotalMatch) {
+      amountMatch = explicitTotalMatch;
+    } else if (!amountMatch) {
+      // Fallback if the original heuristic completely failed, try to just grab the largest decimal number
+      const allNumbers = normalized.match(/\d+(?:,\d+)*(?:\.\d+)?/g);
+      if (allNumbers) {
+        let maxDec = 0;
+        for (const numStr of allNumbers) {
+          if (numStr.includes('.')) {
+            const val = parseFloat(numStr.replace(/,/g, ''));
+            if (val > maxDec) maxDec = val;
+          }
+        }
+        if (maxDec > 0) {
+          parsedAmount = maxDec;
+        } else {
+          // just grab the very last number as receipts usually have total at the bottom
+          parsedAmount = parseFloat(allNumbers[allNumbers.length - 1].replace(/,/g, ''));
+        }
+      }
+    }
+
+    if (amountMatch && !parsedAmount) {
       const cleanVal = amountMatch[1].replace(/[^\d.kmb]/gi, '');
       let multiplier = 1;
       if (cleanVal.toLowerCase().endsWith('k')) multiplier = 1000;
