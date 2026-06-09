@@ -57,7 +57,7 @@ const deterministicTriage = (rawText, normalized) => {
   
   const isIncome = /\b(received|got|earned|paid me|income)\b/i.test(normalized) || explicitTag === 'incoming' || explicitTag === 'business incomes' || explicitTag === 'other incomes';
   const isExpense = /\b(paid|spend|spent|cost|bought|buy|charge|charged|price|gift|donate|transferred)\b/i.test(normalized) || explicitTag === 'general expenses';
-  const isLoanLent = /\b(lent|loaned|owing me|owe me)\b/i.test(normalized) || explicitTag === 'loan given to others';
+  const isLoanLent = /\b(lent|loaned|owing me|owe me|gave|have given|i have)\b/i.test(normalized) || explicitTag === 'loan given to others';
   const isLoanBorrowed = /\b(borrowed|i owe|owe them|owe.*to)\b/i.test(normalized);
   const isDebtPaid = explicitTag === 'paid debt to others';
   const isLoanRepaymentReceived = explicitTag === 'loan repayment by others';
