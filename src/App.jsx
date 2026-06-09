@@ -390,19 +390,24 @@ function App() {
                   onClick={() => setSelectedImage(null)} 
                   style={{position: 'absolute', top: '-8px', right: '-8px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '50%', cursor: 'pointer', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', color: 'var(--text-primary)'}}>✕</button>
               </div>
-              <div className="tag-selector" style={{display: 'flex', flexWrap: 'wrap', gap: '0.5rem'}}>
-                {['incoming', 'business incomes', 'other incomes', 'general expenses', 'loan given to others', 'loan repayment by others', 'paid debt to others'].map(tag => (
+              <div className="tag-selector">
+                {[
+                  { id: 'incoming', icon: '💰', label: 'Incoming', type: 'positive' },
+                  { id: 'business incomes', icon: '🏢', label: 'Business Income', type: 'positive' },
+                  { id: 'other incomes', icon: '💎', label: 'Other Income', type: 'positive' },
+                  { id: 'general expenses', icon: '💸', label: 'General Expense', type: 'negative' },
+                  { id: 'loan given to others', icon: '🤝', label: 'Loan Given', type: 'neutral' },
+                  { id: 'loan repayment by others', icon: '📥', label: 'Loan Repaid to Me', type: 'neutral' },
+                  { id: 'paid debt to others', icon: '📤', label: 'Paid Debt', type: 'neutral' }
+                ].map(tag => (
                   <button 
-                    key={tag}
+                    key={tag.id}
                     type="button"
-                    onClick={() => setSelectedTag(tag === selectedTag ? '' : tag)}
-                    style={{
-                      padding: '4px 8px', borderRadius: '12px', fontSize: '0.75rem', border: '1px solid var(--border)', cursor: 'pointer',
-                      background: selectedTag === tag ? 'var(--text-primary)' : 'var(--bg-card)',
-                      color: selectedTag === tag ? 'var(--bg-card)' : 'var(--text-primary)'
-                    }}
+                    className={`tag-btn ${selectedTag === tag.id ? 'active' : ''} ${tag.type}`}
+                    onClick={() => setSelectedTag(tag.id === selectedTag ? '' : tag.id)}
                   >
-                    {tag}
+                    <span className="tag-icon">{tag.icon}</span>
+                    <span className="tag-label">{tag.label}</span>
                   </button>
                 ))}
               </div>
