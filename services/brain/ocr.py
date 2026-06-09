@@ -14,14 +14,14 @@ def extract_text_from_file(file_bytes: bytes, filename: str, content_type: str) 
         # 2. PDF Documents
         if "pdf" in content_type_lower or filename_lower.endswith('.pdf'):
             try:
-                import fitz  # PyMuPDF
-                doc = fitz.open(stream=file_bytes, filetype="pdf")
+                import pypdf
+                pdf = pypdf.PdfReader(io.BytesIO(file_bytes))
                 text = ""
-                for page in doc:
-                    text += page.get_text() + "\n"
+                for page in pdf.pages:
+                    text += page.extract_text() + "\n"
                 return text.strip()
             except ImportError:
-                print("PyMuPDF (fitz) is not installed. PDF extraction failed.")
+                print("pypdf is not installed. PDF extraction failed.")
                 return ""
                 
         # 3. Images (Fallback to OCR)
