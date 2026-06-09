@@ -16,6 +16,10 @@ export default defineConfig({
       '/api/documents': {
         target: 'http://127.0.0.1:8001',
         changeOrigin: true,
+      },
+      '/api/hands': {
+        target: 'http://127.0.0.1:8002',
+        changeOrigin: true,
       }
     }
   },

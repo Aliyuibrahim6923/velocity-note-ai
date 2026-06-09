@@ -5,10 +5,14 @@ let alarmInterval = null;
 export function initializeAlarms() {
   if (alarmInterval) clearInterval(alarmInterval);
 
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+
   // Poll every 10 seconds
   alarmInterval = setInterval(async () => {
     try {
-      const items = await dbService.getAllItems();
+      const items = await dbService.queryItems({ limit: 1000 });
       const now = Date.now();
       
       for (const item of items) {

@@ -132,6 +132,26 @@ function App() {
       if (googleToken && (newItem.category === 'FINANCIAL_LOG' || newItem.category === 'STATIC_INTEL')) {
         syncItemToDrive(newItem, googleToken);
       }
+
+      if (newItem.category === 'CALENDAR_EVENT' || newItem.category === 'ACTION_ITEM') {
+        let meta = {};
+        try { meta = JSON.parse(newItem.metadata_json); } catch (e) { console.error("Parse error", e); }
+        
+        const startTime = meta.due_date || new Date(Date.now() + 3600000).toISOString();
+        const endTime = meta.end_time || new Date(new Date(startTime).getTime() + 3600000).toISOString();
+
+        fetch('/api/hands/schedule', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: newItem.raw_text,
+            description: "Created by Velocity Note AI",
+            start_time: startTime,
+            end_time: endTime,
+            google_token: googleToken || null
+          })
+        }).catch(err => console.error("Failed to sync to Hands", err));
+      }
     } catch (e) {
       console.error("Failed to process input", e);
     }
