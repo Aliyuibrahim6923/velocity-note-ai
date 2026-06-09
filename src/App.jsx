@@ -210,9 +210,19 @@ function App() {
             ? `${currentInput}\n[SCANNED DOC]: ${data.extracted_text}`
             : `[SCANNED DOC]: ${data.extracted_text}`;
           await processInput(finalPayload);
+        } else {
+          console.error("OCR failed:", data);
+          // Fallback: If OCR fails but they typed something, still process their text
+          if (currentInput) {
+            await processInput(`${currentInput}\n[Image Upload Failed: ${data.detail || 'Could not read image'}]`);
+          } else {
+            alert(`OCR Failed: ${data.detail || 'Could not extract text from image'}`);
+          }
         }
       } catch (err) {
         console.error("Upload failed", err);
+        if (currentInput) await processInput(currentInput);
+        else alert("Image upload failed due to a network error.");
       }
     } else {
       await processInput(currentInput);
