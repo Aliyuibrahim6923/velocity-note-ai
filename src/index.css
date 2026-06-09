@@ -74,6 +74,44 @@ body {
   gap: 0.5rem;
 }
 
+/* Filter Bar */
+.filter-bar {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background-color: white;
+  border-bottom: 1px solid var(--panel-border);
+  overflow-x: auto;
+  scrollbar-width: none; /* Firefox */
+}
+.filter-bar::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Edge */
+}
+
+.filter-btn {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 20px;
+  padding: 0.4rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+  background: #e5e7eb;
+}
+
+.filter-btn.active {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+  box-shadow: 0 2px 4px rgba(128, 0, 0, 0.2);
+}
+
 /* Feed Dashboard */
 .feed-container {
   flex-grow: 1;

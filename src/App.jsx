@@ -9,6 +9,7 @@ function App() {
   const [inputText, setInputText] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [interimText, setInterimText] = useState('');
+  const [activeFilter, setActiveFilter] = useState('ALL');
   const speechRef = useRef(null);
   const feedEndRef = useRef(null);
 
@@ -164,6 +165,14 @@ function App() {
         </div>
       </header>
 
+      <div className="filter-bar">
+        <button className={`filter-btn ${activeFilter === 'ALL' ? 'active' : ''}`} onClick={() => setActiveFilter('ALL')}>All</button>
+        <button className={`filter-btn ${activeFilter === 'ACTION_ITEM' ? 'active' : ''}`} onClick={() => setActiveFilter('ACTION_ITEM')}>Tasks</button>
+        <button className={`filter-btn ${activeFilter === 'CALENDAR_EVENT' ? 'active' : ''}`} onClick={() => setActiveFilter('CALENDAR_EVENT')}>Events</button>
+        <button className={`filter-btn ${activeFilter === 'FINANCIAL_LOG' ? 'active' : ''}`} onClick={() => setActiveFilter('FINANCIAL_LOG')}>Finance</button>
+        <button className={`filter-btn ${activeFilter === 'STATIC_INTEL' ? 'active' : ''}`} onClick={() => setActiveFilter('STATIC_INTEL')}>Intel</button>
+      </div>
+
       <main className="feed-container">
         {items.length === 0 ? (
           <div className="empty-state">
@@ -171,7 +180,7 @@ function App() {
             <p>Your mind, structured instantly.<br/>Tap the mic or type to capture a thought.</p>
           </div>
         ) : (
-          items.map(renderCard)
+          items.filter(item => activeFilter === 'ALL' || item.category === activeFilter).map(renderCard)
         )}
         <div ref={feedEndRef} />
       </main>
