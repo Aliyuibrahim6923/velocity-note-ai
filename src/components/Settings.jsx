@@ -1,20 +1,22 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useGoogleLogin } from '@react-oauth/google';
 import { usePlaidLink } from 'react-plaid-link';
+import { dbService } from '../services/db';
 
-export function Settings({ isOpen, onClose, onGoogleToken }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+export function Settings({ onGoogleToken, googleToken }) {
+  const [isAuthenticated, setIsAuthenticated] = useState(!!googleToken);
   const [plaidToken, setPlaidToken] = useState(null);
   const [isBankLinked, setIsBankLinked] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
-    if (isOpen && !plaidToken) {
+    if (!plaidToken) {
       fetch('/api/link/token/create', { method: 'POST' })
         .then(res => res.json())
         .then(data => setPlaidToken(data.link_token))
         .catch(e => console.error("Failed to fetch Plaid link token:", e));
     }
-  }, [isOpen, plaidToken]);
+  }, [plaidToken]);
 
   const onSuccess = useCallback(async (public_token) => {
     try {
@@ -29,7 +31,7 @@ export function Settings({ isOpen, onClose, onGoogleToken }) {
     }
   }, []);
 
-  const { open, ready } = usePlaidLink({
+  const { open: openPlaid, ready: plaidReady } = usePlaidLink({
     token: plaidToken,
     onSuccess,
   });
@@ -42,18 +44,37 @@ export function Settings({ isOpen, onClose, onGoogleToken }) {
       }
     },
     onError: (error) => console.error('Login Failed:', error),
-    scope: 'https://www.googleapis.com/auth/drive.file'
+    scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/gmail.readonly'
   });
 
-  if (!isOpen) return null;
+  const handleEmailSync = async () => {
+    if (!googleToken) return;
+    setIsSyncing(true);
+    try {
+      const res = await fetch('/api/mail/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ google_token: googleToken })
+      });
+      const data = await res.json();
+      if (data.status === 'success' && data.items) {
+        for (const item of data.items) {
+          await dbService.addItem(item);
+        }
+        alert(`Successfully synced ${data.items.length} records from Gmail!`);
+      }
+    } catch (err) {
+      console.error("Mail sync failed:", err);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <header className="modal-header">
-          <h2>Settings</h2>
-          <button className="close-btn" onClick={onClose}>&times;</button>
-        </header>
+    <div className="view-container fade-in">
+      <header className="view-header">
+        <h2>Settings & Integrations</h2>
+      </header>
 
         <section className="settings-section">
           <h3>Google Integration</h3>
@@ -86,13 +107,21 @@ export function Settings({ isOpen, onClose, onGoogleToken }) {
         </section>
 
         <section className="settings-section">
+          <h3>Email Integration</h3>
+          <p>Sync your Gmail to automatically fetch recent presets and generate financial records.</p>
+          <button className="secondary-btn" onClick={handleEmailSync} disabled={isSyncing || !isAuthenticated}>
+            {isSyncing ? "Syncing..." : "Sync Recent Emails"}
+          </button>
+        </section>
+
+        <section className="settings-section">
           <h3>The Wallet (Bank Sync)</h3>
           <p>Link your financial institution to passively track transactions and automatically sync your ledger.</p>
           {!isBankLinked ? (
             <button 
               className="google-btn" 
-              onClick={() => open()} 
-              disabled={!ready}
+              onClick={() => openPlaid()} 
+              disabled={!plaidReady}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <rect x="2" y="5" width="20" height="14" rx="2"></rect>
@@ -110,7 +139,6 @@ export function Settings({ isOpen, onClose, onGoogleToken }) {
             </div>
           )}
         </section>
-      </div>
     </div>
   );
 }

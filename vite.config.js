@@ -18,8 +18,12 @@ export default defineConfig({
         changeOrigin: true,
       },
       '/api/hands': {
-        target: 'http://127.0.0.1:8002',
-        changeOrigin: true,
+        target: 'http://localhost:8002',
+        changeOrigin: true
+      },
+      '/api/mail': {
+        target: 'http://localhost:8003',
+        changeOrigin: true
       }
     }
   },
