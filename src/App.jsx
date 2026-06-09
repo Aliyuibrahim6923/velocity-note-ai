@@ -207,6 +207,18 @@ function App() {
     }
   };
 
+  const handleUpdate = async (id, newText) => {
+    try {
+      const itemToUpdate = items.find(i => i.id === id);
+      if (!itemToUpdate) return;
+      const updatedItem = { ...itemToUpdate, raw_text: newText };
+      await dbService.saveItem(updatedItem);
+      setItems(prev => prev.map(item => item.id === id ? updatedItem : item));
+    } catch (e) {
+      console.error("Failed to update", e);
+    }
+  };
+
 
 
   return (
@@ -255,7 +267,7 @@ function App() {
           </div>
         ) : (
           items.map((item) => (
-            <LogCard key={item.id} item={item} onDelete={handleDelete} />
+            <LogCard key={item.id} item={item} onDelete={handleDelete} onUpdate={handleUpdate} />
           ))
         )}
         {hasMore && <div className="loading-indicator">Loading...</div>}

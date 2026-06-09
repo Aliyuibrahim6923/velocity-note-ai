@@ -43,6 +43,31 @@ export function FinancialDashboard() {
     fetchFinances();
   }, []);
 
+  const handleDelete = async (id) => {
+    try {
+      await dbService.deleteItem(id);
+      setLogs(prev => prev.filter(log => log.id !== id));
+      // Re-calculate stats could be done by re-running fetchFinances or manually
+      // For simplicity, we just reload the data completely
+      const data = await dbService.queryItems({ category: 'FINANCIAL_LOG' });
+      setLogs(data);
+      let income = 0, expense = 0, loansOwedByMe = 0, loansOwedToMe = 0;
+      data.forEach(item => {
+        try {
+          const meta = JSON.parse(item.metadata_json);
+          const amount = parseFloat(meta.amount || 0);
+          if (meta.type === 'loan_lent') loansOwedToMe += Math.abs(amount);
+          else if (meta.type === 'loan_borrowed') loansOwedByMe += Math.abs(amount);
+          else if (meta.type === 'income' || (amount > 0 && !meta.type)) income += Math.abs(amount);
+          else expense += Math.abs(amount);
+        } catch (err) { console.warn("Failed to parse metadata", err); }
+      });
+      setStats({ income, expense, balance: income - expense, loansOwedByMe, loansOwedToMe });
+    } catch (e) {
+      console.error("Failed to delete", e);
+    }
+  };
+
   return (
     <div className="view-container fade-in">
       <header className="view-header">
@@ -103,7 +128,16 @@ export function FinancialDashboard() {
                   </div>
                 </div>
                 <div className={`tx-amount ${colorClass}`} style={!colorClass ? {color: meta.type === 'loan_lent' ? '#3b82f6' : '#f59e0b'} : {}}>
-                  {sign}${Math.abs(amount).toFixed(2)}
+                  <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+                    <span>{sign}${Math.abs(amount).toFixed(2)}</span>
+                    <button 
+                      onClick={() => handleDelete(log.id)}
+                      style={{background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.7rem', padding: '0 4px'}}
+                      title="Delete Record"
+                    >
+                      ✕
+                    </button>
+                  </div>
                 </div>
               </div>
             );
