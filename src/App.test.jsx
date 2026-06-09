@@ -2,6 +2,7 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import App from './App';
 import { dbService } from './services/db';
 import { triageInput } from './services/ai';
@@ -32,7 +33,11 @@ describe('App Component', () => {
   });
 
   it('renders the header and empty state initially', async () => {
-    render(<App />);
+    render(
+      <GoogleOAuthProvider clientId="test">
+        <App />
+      </GoogleOAuthProvider>
+    );
     expect(screen.getByText('Blitz')).toBeInTheDocument();
     
     await waitFor(() => {
@@ -50,7 +55,11 @@ describe('App Component', () => {
       metadata_json: '{}'
     }]);
 
-    render(<App />);
+    render(
+      <GoogleOAuthProvider clientId="test">
+        <App />
+      </GoogleOAuthProvider>
+    );
     
     await waitFor(() => {
       expect(screen.getByText('Test item')).toBeInTheDocument();
@@ -58,7 +67,11 @@ describe('App Component', () => {
   });
 
   it('submits text and creates a new item', async () => {
-    render(<App />);
+    render(
+      <GoogleOAuthProvider clientId="test">
+        <App />
+      </GoogleOAuthProvider>
+    );
     
     const mockNewItem = {
       id: '2',

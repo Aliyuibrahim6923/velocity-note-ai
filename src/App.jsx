@@ -3,6 +3,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { dbService } from './services/db';
 import { triageInput } from './services/ai';
 import { createSpeechRecognition } from './services/speech';
+import { initializeAlarms } from './services/alarms';
+import { syncItemToDrive } from './services/google';
+import { Settings } from './components/Settings';
+import './App.css';
 
 function App() {
   const [items, setItems] = useState([]);
@@ -10,6 +14,8 @@ function App() {
   const [isRecording, setIsRecording] = useState(false);
   const [interimText, setInterimText] = useState('');
   const [activeFilter, setActiveFilter] = useState('ALL');
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [googleToken, setGoogleToken] = useState(null);
   const speechRef = useRef(null);
   const feedEndRef = useRef(null);
 
@@ -23,6 +29,7 @@ function App() {
         console.error("Failed to load items", e);
       }
     };
+    initializeAlarms();
     loadItems();
   }, []);
 
@@ -89,6 +96,11 @@ function App() {
       
       // Update UI state
       setItems(prev => [newItem, ...prev]);
+
+      // Sync specific tags to Google Drive if authenticated
+      if (googleToken && (newItem.category === 'FINANCIAL_LOG' || newItem.category === 'STATIC_INTEL')) {
+        syncItemToDrive(newItem, googleToken);
+      }
     } catch (e) {
       console.error("Failed to process input", e);
     }
@@ -163,6 +175,12 @@ function App() {
           </svg>
           Blitz
         </div>
+        <button className="settings-btn" onClick={() => setIsSettingsOpen(true)} style={{background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)'}}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
       </header>
 
       <div className="filter-bar">
@@ -213,6 +231,8 @@ function App() {
           </button>
         </form>
       </div>
+      {/* Settings Modal */}
+      <Settings isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} onGoogleToken={setGoogleToken} />
     </div>
   );
 }
