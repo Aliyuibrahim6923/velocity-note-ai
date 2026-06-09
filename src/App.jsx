@@ -18,6 +18,7 @@ function App() {
   const [googleToken, setGoogleToken] = useState(null);
   const speechRef = useRef(null);
   const feedEndRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   // Initialize DB and fetch items
   useEffect(() => {
@@ -74,6 +75,21 @@ function App() {
     }
   };
 
+  const processInput = async (finalPayload) => {
+    if (!finalPayload) return;
+    try {
+      const newItem = await triageInput(finalPayload);
+      await dbService.saveItem(newItem);
+      setItems(prev => [newItem, ...prev]);
+
+      if (googleToken && (newItem.category === 'FINANCIAL_LOG' || newItem.category === 'STATIC_INTEL')) {
+        syncItemToDrive(newItem, googleToken);
+      }
+    } catch (e) {
+      console.error("Failed to process input", e);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const finalPayload = (inputText + ' ' + interimText).trim();
@@ -87,22 +103,30 @@ function App() {
       setIsRecording(false);
     }
 
-    try {
-      // Background Triage
-      const newItem = await triageInput(finalPayload);
-      
-      // Save to IndexedDB
-      await dbService.saveItem(newItem);
-      
-      // Update UI state
-      setItems(prev => [newItem, ...prev]);
+    await processInput(finalPayload);
+  };
 
-      // Sync specific tags to Google Drive if authenticated
-      if (googleToken && (newItem.category === 'FINANCIAL_LOG' || newItem.category === 'STATIC_INTEL')) {
-        syncItemToDrive(newItem, googleToken);
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      // 1. Send to Python Brain Service for OCR and Neo4j Graphing
+      const res = await fetch('/api/documents/upload', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      
+      if (data.status === 'success') {
+        // 2. Feed the extracted OCR text into the local AI triage engine
+        processInput(`[SCANNED DOC]: ${data.extracted_text}`);
       }
-    } catch (e) {
-      console.error("Failed to process input", e);
+    } catch (err) {
+      console.error("Upload failed", err);
     }
   };
 
@@ -205,6 +229,37 @@ function App() {
 
       <div className="capture-stream">
         <form onSubmit={handleSubmit} className="input-row">
+          <button 
+            type="button" 
+            className={`icon-btn mic-btn ${isRecording ? 'recording' : ''}`}
+            onClick={handleMicToggle}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+              <line x1="12" y1="19" x2="12" y2="23"></line>
+              <line x1="8" y1="23" x2="16" y2="23"></line>
+            </svg>
+          </button>
+          <button 
+            type="button" 
+            className="icon-btn cam-btn"
+            onClick={() => fileInputRef.current?.click()}
+            title="Scan Document (OCR)"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+          </button>
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            style={{ display: 'none' }} 
+            accept="image/*" 
+            onChange={handleImageUpload} 
+          />
           <input
             type="text"
             className="capture-input"
@@ -214,18 +269,6 @@ function App() {
               if(!isRecording) setInputText(e.target.value);
             }}
           />
-          <button 
-            type="button" 
-            className={`mic-button ${isRecording ? 'recording' : ''}`}
-            onClick={handleMicToggle}
-          >
-            {isRecording ? (
-               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
-            ) : (
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
-            )}
-          </button>
-          
           <button type="submit" className="send-button" style={{display: inputText.trim() || interimText.trim() ? 'block' : 'none'}}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
           </button>

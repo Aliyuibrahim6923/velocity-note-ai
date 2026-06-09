@@ -5,8 +5,16 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig({
   server: {
     proxy: {
-      '/api': {
+      '/api/link': {
         target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+      },
+      '/api/webhooks': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+      },
+      '/api/documents': {
+        target: 'http://127.0.0.1:8001',
         changeOrigin: true,
       }
     }
