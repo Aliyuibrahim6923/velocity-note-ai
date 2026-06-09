@@ -46,8 +46,14 @@ const deterministicTriage = (rawText, normalized) => {
   let metadata = {};
 
   // Financial heuristics
-  const amountMatch = normalized.match(/(?:paid|spent|cost|bought|charged|price).*?\s+((?:\$|€|£|₦)?\d+(?:,\d+)?(?:\.\d+)?(?:k|m|b)?)/i);
-  const isFinancial = /\b(paid|spend|spent|cost|bought|buy|charge|charged|price|dollar|euro|naira|k)\b/i.test(normalized) && amountMatch;
+  const amountMatch = normalized.match(/((?:\$|€|£|₦)?\d+(?:,\d+)?(?:\.\d+)?(?:k|m|b)?)/i);
+  
+  const isIncome = /\b(received|got|earned|paid me|income)\b/i.test(normalized);
+  const isExpense = /\b(paid|spend|spent|cost|bought|buy|charge|charged|price|gift|donate|transferred)\b/i.test(normalized);
+  const isLoanLent = /\b(lent|loaned|owing me|owe me)\b/i.test(normalized);
+  const isLoanBorrowed = /\b(borrowed|i owe|owe them|owe.*to)\b/i.test(normalized);
+  
+  const isFinancial = (isIncome || isExpense || isLoanLent || isLoanBorrowed) && amountMatch;
 
   // Calendar heuristics
   const isEvent = /\b(meeting|dinner|lunch|appointment|schedule|tomorrow|today at|pm|am)\b/i.test(normalized) && !/\b(remind)\b/i.test(normalized);
@@ -68,10 +74,17 @@ const deterministicTriage = (rawText, normalized) => {
       if (cleanVal.toLowerCase().endsWith('b')) multiplier = 1000000000;
       parsedAmount = parseFloat(cleanVal.replace(/[kmb]/gi, '')) * multiplier;
     }
-    metadata.amount = parsedAmount;
     
-    // Simple payee extraction: word after 'paid' or 'bought'
-    const payeeMatch = normalized.match(/paid\s+(\w+)/i) || normalized.match(/bought\s+(?:from\s+)?(\w+)/i);
+    let type = 'expense';
+    if (isIncome) type = 'income';
+    if (isLoanLent) type = 'loan_lent';
+    if (isLoanBorrowed) type = 'loan_borrowed';
+    
+    metadata.amount = parsedAmount;
+    metadata.type = type;
+    
+    // Simple payee extraction
+    const payeeMatch = normalized.match(/(?:paid|bought|gifted|transferred to|lent to|borrowed from)\s+(?:from\s+)?(\w+)/i);
     if (payeeMatch) metadata.payee = payeeMatch[1];
 
   } else if (isEvent) {
