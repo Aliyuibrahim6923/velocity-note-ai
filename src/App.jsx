@@ -144,17 +144,26 @@ function App() {
         const startTime = meta.due_date || new Date(Date.now() + 3600000).toISOString();
         const endTime = meta.end_time || new Date(new Date(startTime).getTime() + 3600000).toISOString();
 
-        fetch('/api/hands/schedule', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            title: newItem.raw_text,
-            description: "Created by Velocity Note AI",
-            start_time: startTime,
-            end_time: endTime,
-            google_token: googleToken || null
-          })
-        }).catch(err => console.error("Failed to sync to Hands", err));
+        if (newItem.category === 'CALENDAR_EVENT' && googleToken) {
+          try {
+            const handsUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+              ? '' : 'http://127.0.0.1:8002';
+            
+            await fetch(`${handsUrl}/api/hands/schedule`, {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({
+                title: newItem.raw_text,
+                description: "Created by Velocity Note AI",
+                start_time: startTime,
+                end_time: endTime,
+                google_token: googleToken || null
+              })
+            });
+          } catch (err) {
+            console.error("Failed to sync to Hands", err);
+          }
+        }
       }
     } catch (e) {
       console.error("Failed to process input", e);
@@ -200,7 +209,10 @@ function App() {
       const formData = new FormData();
       formData.append('file', currentImage);
       try {
-        const res = await fetch('/api/documents/upload', {
+        const brainUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+          ? '' : 'http://127.0.0.1:8001';
+          
+        const res = await fetch(`${brainUrl}/api/documents/upload`, {
           method: 'POST',
           body: formData
         });

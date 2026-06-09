@@ -1,8 +1,17 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 import ocr
 import graph
 
 app = FastAPI(title="Velocity Note AI Brain Service")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.post("/api/documents/upload")
 async def upload_document(file: UploadFile = File(...)):
