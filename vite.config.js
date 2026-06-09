@@ -49,7 +49,16 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/svg+xml'
           }
-        ]
+        ],
+        share_target: {
+          action: '/',
+          method: 'GET',
+          params: {
+            title: 'title',
+            text: 'text',
+            url: 'url'
+          }
+        }
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}']

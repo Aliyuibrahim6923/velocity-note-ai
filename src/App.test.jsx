@@ -106,4 +106,33 @@ describe('App Component', () => {
       expect(screen.getByText('Buy milk')).toBeInTheDocument();
     });
   });
+
+  it('processes PWA share target parameters on mount', async () => {
+    const originalLocation = window.location;
+    delete window.location;
+    window.location = { ...originalLocation, search: '?text=Buy%20milk&title=Shopping' };
+
+    const mockNewItem = {
+      id: 'share_1',
+      raw_text: '[SHARED VIA DEVICE]: Shopping Buy milk',
+      category: 'ACTION_ITEM',
+      priority: 'NORMAL',
+      created_at: Date.now(),
+      metadata_json: '{}'
+    };
+    triageInput.mockResolvedValue(mockNewItem);
+
+    render(
+      <GoogleOAuthProvider clientId="test">
+        <App />
+      </GoogleOAuthProvider>
+    );
+
+    await waitFor(() => {
+      expect(triageInput).toHaveBeenCalledWith('[SHARED VIA DEVICE]: Shopping Buy milk');
+      expect(dbService.saveItem).toHaveBeenCalledWith(mockNewItem);
+    });
+
+    window.location = originalLocation;
+  });
 });

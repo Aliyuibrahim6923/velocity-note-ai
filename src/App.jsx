@@ -160,6 +160,25 @@ function App() {
     }
   };
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const text = params.get('text');
+    const url = params.get('url');
+    const title = params.get('title');
+
+    let combined = '';
+    if (title) combined += title + ' ';
+    if (text) combined += text + ' ';
+    if (url) combined += url;
+    
+    if (combined.trim()) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      processInput(`[SHARED VIA DEVICE]: ${combined.trim()}`);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const finalPayload = (inputText + ' ' + interimText).trim();
