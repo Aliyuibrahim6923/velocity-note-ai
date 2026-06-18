@@ -64,17 +64,17 @@ export function LogCard({ item, onDelete, onUpdate, onComplete }) {
 
   return (
     <div className={cardClass} style={{ ...(isCompleted ? {opacity: 0.6} : {}), position: 'relative' }}>
-      <div className="card-header" style={{ display: 'flex', alignItems: 'center' }}>
+      <div className="card-header">
         <span className={badgeClass}>{badgeText}</span>
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+        <div className="card-header-controls">
           <span>{new Date(item.created_at).toLocaleString([], {month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit'})}</span>
           
-          <div style={{ display: 'flex', gap: '0.4rem', borderLeft: '1px solid var(--border)', paddingLeft: '0.6rem', marginLeft: '0.2rem' }}>
+          <div className="card-actions">
             {isAction && !isCompleted && !isEditing && (
               <button 
                 onClick={handleComplete}
                 title="Complete Action"
-                style={{ background: 'none', border: 'none', color: '#10b981', cursor: 'pointer', fontSize: '1rem', padding: '0', lineHeight: '1' }}
+                className="card-btn success"
               >
                 ✓
               </button>
@@ -83,7 +83,7 @@ export function LogCard({ item, onDelete, onUpdate, onComplete }) {
               <button 
                 onClick={handleEdit}
                 title="Edit Log"
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1rem', padding: '0', lineHeight: '1' }}
+                className="card-btn neutral"
               >
                 ✎
               </button>
@@ -92,15 +92,15 @@ export function LogCard({ item, onDelete, onUpdate, onComplete }) {
               <button 
                 onClick={handleDelete}
                 title="Delete Log"
-                style={{ background: 'none', border: 'none', color: 'var(--error, #ef4444)', cursor: 'pointer', fontSize: '1rem', padding: '0', lineHeight: '1' }}
+                className="card-btn danger"
               >
                 ✕
               </button>
             )}
             <button 
               onClick={() => setIsCollapsed(!isCollapsed)}
-              style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.2rem', padding: '0', lineHeight: '1', display: 'flex', alignItems: 'center', marginLeft: '0.2rem' }}
               title={isCollapsed ? "Expand" : "Collapse"}
+              className="card-btn neutral"
             >
               {isCollapsed ? '⌄' : '⌃'}
             </button>
